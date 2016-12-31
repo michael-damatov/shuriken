@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8DE93D00-4B56-424B-AA7D-02C4A4A41F0D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Shuriken</RootNamespace>
+    <AssemblyName>Shuriken.Wpf</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Shuriken.Wpf.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>bin\Release\Shuriken.Wpf.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>Properties\Shuriken.public.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="JetBrains.Annotations, Version=10.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.10.2.1\lib\net\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Monitoring\WpfNotificationContext.cs" />
+    <Compile Include="Command.cs" />
+    <Compile Include="Command.ICommand.cs" />
+    <Compile Include="CommandBase.cs" />
+    <Compile Include="Command[T].cs" />
+    <Compile Include="Command[T].ICommand.cs" />
+    <Compile Include="Diagnostics\EventSource.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.Current.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.IAsyncDisposable.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.Monitoring.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.Sessions.cs" />
+    <Compile Include="Monitoring\ApplicationMonitorScope.Suspending.cs" />
+    <Compile Include="Monitoring\INotificationContext.cs" />
+    <Compile Include="Monitoring\ObservableObjectInfo.cs" />
+    <Compile Include="Monitoring\_Caching\CommandPropertyAccessor.cs" />
+    <Compile Include="Monitoring\_Caching\ObservableObjectTypeCache.cs" />
+    <Compile Include="Monitoring\_Caching\PropertyAccessor.cs" />
+    <Compile Include="Monitoring\_Caching\PropertyPropertyAccessor.cs" />
+    <Compile Include="Monitoring\_ValueBags\CommandValueBag.cs" />
+    <Compile Include="Monitoring\_ValueBags\PropertyValueBag.cs" />
+    <Compile Include="Monitoring\_ValueBags\ValueBag.cs" />
+    <Compile Include="ObservableAttribute.cs" />
+    <Compile Include="ObservableObject.cs" />
+    <Compile Include="ObservableObject.INotifyPropertyChanged.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Properties\Shuriken.public.snk" />
+    <None Include="Shuriken.Wpf.csproj.DotSettings" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
