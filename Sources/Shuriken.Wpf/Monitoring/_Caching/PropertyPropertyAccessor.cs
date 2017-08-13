@@ -19,5 +19,7 @@ namespace Shuriken.Monitoring
         public Func<ObservableObject, object> Getter { get; }
 
         public bool UseReferenceEquality { get; }
+
+        public override ValueBag CreateValueBag(ObservableObject observableObject) => new PropertyValueBag(observableObject, this);
     }
 }

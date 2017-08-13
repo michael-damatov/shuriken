@@ -1,12 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Shuriken.Diagnostics
 {
-    [EventSource(Name = "Shuriken")]
+    [EventSource(Name = @"Shuriken")]
     internal sealed class EventSource : System.Diagnostics.Tracing.EventSource
     {
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global", Justification = "The class must be public due to an ETW restriction.")]
@@ -35,16 +34,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Start,
             Channel = EventChannel.Operational
         )]
-        public void MonitorStart(
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    1,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void MonitorStart() => WriteEvent(1);
 
         /// <summary>
         /// Monitor has been stopped.
@@ -59,16 +49,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Stop,
             Channel = EventChannel.Operational
         )]
-        public void MonitorStop(
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    2,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void MonitorStop() => WriteEvent(2);
 
         /// <summary>
         /// Monitor has been suspended.
@@ -83,16 +64,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Suspend,
             Channel = EventChannel.Operational
         )]
-        public void MonitorSuspend(
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    3,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void MonitorSuspend() => WriteEvent(3);
 
         /// <summary>
         /// Monitor has been resumed.
@@ -107,16 +79,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Resume,
             Channel = EventChannel.Operational
         )]
-        public void MonitorResume(
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    4,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void MonitorResume() => WriteEvent(4);
 
         /// <summary>
         /// Stopping the monitoring because of an exception while updating the values: {0}
@@ -131,18 +94,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void StoppingDueToFailedUpdate(
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    5,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void StoppingDueToFailedUpdate(string exception) => WriteEvent(5, exception);
 
         /// <summary>
         /// Stopping the monitoring because of an exception while sending the change notifications: {0}
@@ -157,18 +109,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void StoppingDueToFailedChangeNotifications(
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    6,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void StoppingDueToFailedChangeNotifications(string exception) => WriteEvent(6, exception);
 
         /// <summary>
         /// Failed attaching the system event '{0}': {1}
@@ -183,48 +124,22 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void FailedAttachingSystemEvent(
-            string systemEvent,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    7,
-                    systemEvent,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void FailedAttachingSystemEvent(string systemEvent, string exception) => WriteEvent(7, systemEvent, exception);
 
         /// <summary>
-        /// The {0} event hander is assigned, but the {1} is not available.
+        /// The {0} event handler is assigned, but the {1} is not available.
         /// </summary>
         [Conditional("TRACE")]
         [Event(
             8,
             Version = 0,
-            Message = "The {0} event hander is assigned, but the {1} is not available.",
+            Message = "The {0} event handler is assigned, but the {1} is not available.",
             Level = EventLevel.Warning,
             Keywords = Keywords.Log,
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void MissingMonitoringScope(
-            string eventName,
-            string scope,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    8,
-                    eventName,
-                    scope,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void MissingMonitoringScope(string eventName, string scope) => WriteEvent(8, eventName, scope);
 
         /// <summary>
         /// Cannot initially get the value of the '{1}' property of the '{0}' object: {2}
@@ -239,22 +154,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableInitiallyToReadProperty(
-            string type,
-            string property,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    9,
-                    type,
-                    property,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableInitiallyToReadProperty(string type, string property, string exception) => WriteEvent(9, type, property, exception);
 
         /// <summary>
         /// Cannot get the value of the '{1}' property of the '{0}' object: {2}
@@ -269,22 +169,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableSubsequentlyToReadProperty(
-            string type,
-            string property,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    10,
-                    type,
-                    property,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableSubsequentlyToReadProperty(string type, string property, string exception) => WriteEvent(10, type, property, exception);
 
         /// <summary>
         /// Cannot initially invoke the '{2}' method of the '{1}' property of the '{0}' object: {3}
@@ -299,24 +184,8 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableInitiallyToInvokeCommandMethod(
-            string type,
-            string property,
-            string method,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    11,
-                    type,
-                    property,
-                    method,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableInitiallyToInvokeCommandMethod(string type, string property, string method, string exception)
+            => WriteEvent(11, type, property, method, exception);
 
         /// <summary>
         /// Cannot invoke the '{2}' method of the '{1}' property of the '{0}' object: {3}
@@ -331,24 +200,8 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableSubsequentlyToInvokeCommandMethod(
-            string type,
-            string property,
-            string method,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    12,
-                    type,
-                    property,
-                    method,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableSubsequentlyToInvokeCommandMethod(string type, string property, string method, string exception)
+            => WriteEvent(12, type, property, method, exception);
 
         /// <summary>
         /// Cannot analyze the value of the '{1}' property of the '{0}' object: {2}
@@ -363,22 +216,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableToAnalyzeProperty(
-            string type,
-            string property,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    13,
-                    type,
-                    property,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableToAnalyzeProperty(string type, string property, string exception) => WriteEvent(13, type, property, exception);
 
         /// <summary>
         /// Cannot raise the change notification for the '{1}' property of the '{0}' object: {2}
@@ -393,22 +231,8 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableToRaisePropertyChangeNotification(
-            string type,
-            string property,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    14,
-                    type,
-                    property,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableToRaisePropertyChangeNotification(string type, string property, string exception)
+            => WriteEvent(14, type, property, exception);
 
         /// <summary>
         /// Cannot raise the change notification for the '{1}' command property of the '{0}' object: {2}
@@ -423,22 +247,23 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Operational
         )]
-        public void UnableToRaiseCommandPropertyChangeNotification(
-            string type,
-            string property,
-            string exception,
-            [CallerMemberName] string memberName = null,
-            [CallerFilePath] string sourceFilePath = null,
-            [CallerLineNumber] int sourceLineNumber = 0)
-            =>
-                WriteEvent(
-                    15,
-                    type,
-                    property,
-                    exception,
-                    memberName,
-                    sourceFilePath,
-                    sourceLineNumber);
+        public void UnableToRaiseCommandPropertyChangeNotification(string type, string property, string exception)
+            => WriteEvent(15, type, property, exception);
+
+        /// <summary>
+        /// Command execution failed: {0}
+        /// </summary>
+        [Conditional("TRACE")]
+        [Event(
+            16,
+            Version = 0,
+            Message = "Command execution failed: {0}",
+            Level = EventLevel.Warning,
+            Keywords = Keywords.Log,
+            Opcode = EventOpcode.Info,
+            Channel = EventChannel.Operational
+            )]
+        public void CommandFailed(string exception) => WriteEvent(16, exception);
 
         /// <remarks>Number of monitored properties. Lower value is better. A high value can indicate an unnecessary observation or memory leaks (e.g. due to missing UI virtualization).</remarks>
         [Conditional("TRACE")]
@@ -450,12 +275,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Analytic
         )]
-        public void PerformanceMonitoredProperties(
-            int count)
-            =>
-                WriteEvent(
-                    19,
-                    count);
+        public void PerformanceMonitoredProperties(int count) => WriteEvent(19, count);
 
         /// <remarks>Complete cycle time [ms]. Lower value is better. For smooth performance it should not exceed 15ms.</remarks>
         [Conditional("TRACE")]
@@ -467,12 +287,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Analytic
         )]
-        public void PerformanceCycleTime(
-            long elapsedMilliseconds)
-            =>
-                WriteEvent(
-                    20,
-                    elapsedMilliseconds);
+        public void PerformanceCycleTime(long elapsedMilliseconds) => WriteEvent(20, elapsedMilliseconds);
 
         /// <param name="capacityThreadAffine">Total number of slots (thread-affine).</param>
         /// <param name="countThreadAffine">Number of used slots (thread-affine).</param>
@@ -487,18 +302,8 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Analytic
         )]
-        public void PerformanceLists(
-            int capacityThreadAffine,
-            int countThreadAffine,
-            int capacityThreadSafe,
-            int countThreadSafe)
-            =>
-                WriteEvent(
-                    21,
-                    capacityThreadAffine,
-                    countThreadAffine,
-                    capacityThreadSafe,
-                    countThreadSafe);
+        public void PerformanceLists(int capacityThreadAffine, int countThreadAffine, int capacityThreadSafe, int countThreadSafe)
+            => WriteEvent(21, capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
 
         /// <param name="capacityThreadAffine">Total number of slots (thread-affine with changed properties).</param>
         /// <param name="countThreadAffine">Number of used slots (thread-affine with changed properties).</param>
@@ -513,18 +318,8 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Analytic
         )]
-        public void PerformanceListsWithChangedProperties(
-            int capacityThreadAffine,
-            int countThreadAffine,
-            int capacityThreadSafe,
-            int countThreadSafe)
-            =>
-                WriteEvent(
-                    22,
-                    capacityThreadAffine,
-                    countThreadAffine,
-                    capacityThreadSafe,
-                    countThreadSafe);
+        public void PerformanceListsWithChangedProperties(int capacityThreadAffine, int countThreadAffine, int capacityThreadSafe, int countThreadSafe)
+            => WriteEvent(22, capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
 
         /// <param name="capacityThreadAffine">Total number of slots (thread-affine with items to be removed).</param>
         /// <param name="countThreadAffine">Number of used slots (thread-affine with items to be removed).</param>
@@ -539,17 +334,7 @@ namespace Shuriken.Diagnostics
             Opcode = EventOpcode.Info,
             Channel = EventChannel.Analytic
         )]
-        public void PerformanceListsWithItemsToBeRemoved(
-            int capacityThreadAffine,
-            int countThreadAffine,
-            int capacityThreadSafe,
-            int countThreadSafe)
-            =>
-                WriteEvent(
-                    23,
-                    capacityThreadAffine,
-                    countThreadAffine,
-                    capacityThreadSafe,
-                    countThreadSafe);
+        public void PerformanceListsWithItemsToBeRemoved(int capacityThreadAffine, int countThreadAffine, int capacityThreadSafe, int countThreadSafe)
+            => WriteEvent(23, capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
     }
 }

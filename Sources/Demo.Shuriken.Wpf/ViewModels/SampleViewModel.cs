@@ -4,10 +4,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
 {
     public sealed class SampleViewModel : ObservableObject
     {
-        public SampleViewModel(int data)
-        {
-            Data = data;
-        }
+        public SampleViewModel(int data) => Data = data;
 
         [Observable]
         public int Data { get; set; }

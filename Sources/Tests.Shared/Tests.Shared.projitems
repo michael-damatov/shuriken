@@ -10,10 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyAssert.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DisposableAssert.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataDrivenTestMethodAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DisposableTypeAssert.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExceptionAssert.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SequenceAssert.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TestController.cs" />
   </ItemGroup>
 </Project>

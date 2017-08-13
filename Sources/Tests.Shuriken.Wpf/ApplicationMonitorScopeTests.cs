@@ -24,9 +24,7 @@ namespace Tests.Shuriken.Wpf
             readonly InvalidNotificationContextMode mode;
 
             internal FailingNotificationContext([NotNull] TaskScheduler taskScheduler, InvalidNotificationContextMode mode) : base(taskScheduler)
-            {
-                this.mode = mode;
-            }
+                => this.mode = mode;
 
             public override void Invoke(Action action)
             {
@@ -50,7 +48,7 @@ namespace Tests.Shuriken.Wpf
                         throw new E();
 
                     case InvalidNotificationContextMode.InvokeAsyncFails:
-                        return Task.Run(() => { throw new E(); });
+                        return Task.Run(() => throw new E());
 
                     case InvalidNotificationContextMode.InvokeAsyncReturnsNull:
                         return null;
@@ -69,6 +67,7 @@ namespace Tests.Shuriken.Wpf
             InvokeAsyncReturnsNull,
         }
 
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         static async Task ExecuteInApplicationMonitorScopeWithFailingNotificationContext<T, E>(
             InvalidNotificationContextMode mode,
             [NotNull] T observableObject,
@@ -155,12 +154,12 @@ namespace Tests.Shuriken.Wpf
                 ShimSystemEvents.Behavior = ShimBehaviors.Fallthrough;
 
                 // failure attaching system event (InvalidOperationException)
-                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => { throw new InvalidOperationException(); };
+                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => throw new InvalidOperationException();
 
                 await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(async monitorScope => await Task.Yield());
 
                 // failure attaching system event (ExternalException)
-                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => { throw new ExternalException(); };
+                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => throw new ExternalException();
 
                 await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(async monitorScope => await Task.Yield());
 
@@ -191,7 +190,7 @@ namespace Tests.Shuriken.Wpf
                 {
                     await Task.Yield();
 
-                    DisposableAssert.IsValid(() => monitorScope.Suspend());
+                    DisposableTypeAssert.IsValid(monitorScope.Suspend);
                 });
 
             await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(

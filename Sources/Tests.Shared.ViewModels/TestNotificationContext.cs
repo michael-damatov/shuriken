@@ -13,10 +13,7 @@ namespace Tests.Shared.ViewModels
         [NotNull]
         readonly TaskScheduler taskScheduler;
 
-        internal TestNotificationContext([NotNull] TaskScheduler taskScheduler)
-        {
-            this.taskScheduler = taskScheduler;
-        }
+        internal TestNotificationContext([NotNull] TaskScheduler taskScheduler) => this.taskScheduler = taskScheduler;
 
         public virtual void Invoke(Action action)
             => Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, taskScheduler).Wait();

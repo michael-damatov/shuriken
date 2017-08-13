@@ -85,13 +85,11 @@ namespace Tests.Shared.ViewModels
             [NotNull] ICollection<string> notifiedPropertyNames,
             [NotNull] string propertiesOrCommands = "properties")
         {
-            Dictionary<string, int> notifiedButUnexpectedPropertyNames;
-            Dictionary<string, int> expectedButNotNotifiedPropertyNames;
             CompareLists(
                 notifiedPropertyNames,
                 expectedNotifiedPropertyNames,
-                out notifiedButUnexpectedPropertyNames,
-                out expectedButNotNotifiedPropertyNames);
+                out var notifiedButUnexpectedPropertyNames,
+                out var expectedButNotNotifiedPropertyNames);
 
             var builder = new StringBuilder();
 
@@ -124,7 +122,7 @@ namespace Tests.Shared.ViewModels
         }
 
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         public static async Task RaisesPropertyChangeNotifications<T>(
             [NotNull] T observableObject,
             [NotNull] Action<T> action,

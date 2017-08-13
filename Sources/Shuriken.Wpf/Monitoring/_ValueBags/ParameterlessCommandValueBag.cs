@@ -5,16 +5,16 @@ using Shuriken.Diagnostics;
 
 namespace Shuriken.Monitoring
 {
-    internal sealed class CommandValueBag : ValueBag
+    internal sealed class ParameterlessCommandValueBag : ValueBag
     {
         [NotNull]
-        readonly CommandPropertyAccessor propertyAccessor;
+        readonly ParameterlessCommandPropertyAccessor propertyAccessor;
 
-        volatile Command currentValue;
+        volatile ParameterlessCommand currentValue;
 
         volatile bool currentCanExecute;
 
-        volatile Command newValue;
+        volatile ParameterlessCommand newValue;
 
         volatile bool newCanExecute;
 
@@ -26,7 +26,9 @@ namespace Shuriken.Monitoring
 
         volatile bool isCanExecuteChanged;
 
-        internal CommandValueBag([NotNull] ObservableObject observableObject, [NotNull] CommandPropertyAccessor propertyAccessor)
+        internal ParameterlessCommandValueBag(
+            [NotNull] ObservableObject observableObject,
+            [NotNull] ParameterlessCommandPropertyAccessor propertyAccessor)
         {
             this.propertyAccessor = propertyAccessor;
 
@@ -52,7 +54,7 @@ namespace Shuriken.Monitoring
                     EventSource.Log.UnableInitiallyToInvokeCommandMethod(
                         propertyAccessor.ObjectTypeName,
                         propertyAccessor.Name,
-                        nameof(Command.CanExecute),
+                        nameof(ParameterlessCommand.CanExecute),
                         e.ToString());
                 }
             }
@@ -94,7 +96,7 @@ namespace Shuriken.Monitoring
                         EventSource.Log.UnableSubsequentlyToInvokeCommandMethod(
                             propertyAccessor.ObjectTypeName,
                             propertyAccessor.Name,
-                            nameof(Command.CanExecute),
+                            nameof(ParameterlessCommand.CanExecute),
                             e.ToString());
                     }
 

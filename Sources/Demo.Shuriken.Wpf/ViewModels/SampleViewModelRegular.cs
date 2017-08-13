@@ -6,17 +6,11 @@ namespace Demo.Shuriken.Wpf.ViewModels
     {
         int data;
 
-        public SampleViewModelRegular(int data)
-        {
-            this.data = data;
-        }
+        public SampleViewModelRegular(int data) => this.data = data;
 
         public int Data
         {
-            get
-            {
-                return data;
-            }
+            get => data;
             set
             {
                 if (data != value)
