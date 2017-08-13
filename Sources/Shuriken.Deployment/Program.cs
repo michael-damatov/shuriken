@@ -15,12 +15,7 @@ namespace Shuriken.Deployment
         {
             try
             {
-                string assemblyPath;
-                bool isReleaseBuild;
-                string nugetPath;
-                string nuspecPath;
-                string nuspecAnnotationsPath;
-                GetPaths(out assemblyPath, out isReleaseBuild, out nugetPath, out nuspecPath, out nuspecAnnotationsPath);
+                GetPaths(out var assemblyPath, out var isReleaseBuild, out var nugetPath, out var nuspecPath, out var nuspecAnnotationsPath);
 
                 if (isReleaseBuild)
                 {
@@ -33,8 +28,7 @@ namespace Shuriken.Deployment
                     ResignAssembly(assemblyPath, snkPath);
                 }
 
-                string packageFileName;
-                UpdateNuspec(assemblyPath, nuspecPath, out packageFileName);
+                UpdateNuspec(assemblyPath, nuspecPath, out var packageFileName);
 
                 BuildPackages(nugetPath, nuspecPath, nuspecAnnotationsPath);
 
@@ -73,6 +67,7 @@ namespace Shuriken.Deployment
             isReleaseBuild = string.Equals(executionDirectory, "release", StringComparison.OrdinalIgnoreCase);
 
             var solutionDirectory = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(executionDirectoryPath)));
+            Debug.Assert(solutionDirectory != null);
 
             nugetPath = Path.Combine(solutionDirectory, "NuGet.exe");
 
@@ -96,7 +91,7 @@ namespace Shuriken.Deployment
 
         static void UpdateNuspec([NotNull] string assemblyPath, [NotNull] string nuspecPath, [NotNull] out string packageFileName)
         {
-            Console.Write("Updating nuspec...");
+            Console.Write(@"Updating nuspec...");
 
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += (_, e) => Assembly.ReflectionOnlyLoad(e.Name);
 
@@ -180,6 +175,7 @@ namespace Shuriken.Deployment
         static void OpenInWindowsExplorer([NotNull] string nuspecPath, [NotNull] string packageFileName)
         {
             var nuspecDirectoryPath = Path.GetDirectoryName(nuspecPath);
+            Debug.Assert(nuspecDirectoryPath != null);
 
             using (Process.Start("explorer", "/select, \"" + Path.Combine(nuspecDirectoryPath, packageFileName) + "\"")) { }
         }

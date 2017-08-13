@@ -16,13 +16,13 @@ namespace Shuriken.Monitoring
         [NotNull]
         [ItemNotNull]
         public static List<PropertyAccessor> Register(
-            [NotNull] Type type, [InstantHandle] [NotNull] Func<List<PropertyAccessor>> propertyAccessorsFactory)
+            [NotNull] Type type,
+            [InstantHandle] [NotNull] Func<List<PropertyAccessor>> propertyAccessorsFactory)
         {
             gate.EnterReadLock();
             try
             {
-                List<PropertyAccessor> list;
-                if (cache.TryGetValue(type, out list))
+                if (cache.TryGetValue(type, out var list))
                 {
                     return list;
                 }
@@ -35,8 +35,7 @@ namespace Shuriken.Monitoring
             gate.EnterWriteLock();
             try
             {
-                List<PropertyAccessor> list;
-                if (cache.TryGetValue(type, out list))
+                if (cache.TryGetValue(type, out var list))
                 {
                     return list;
                 }
@@ -58,9 +57,7 @@ namespace Shuriken.Monitoring
             gate.EnterReadLock();
             try
             {
-                List<PropertyAccessor> list;
-                cache.TryGetValue(type, out list);
-                return list;
+                return cache.TryGetValue(type, out var list) ? list : null;
             }
             finally
             {

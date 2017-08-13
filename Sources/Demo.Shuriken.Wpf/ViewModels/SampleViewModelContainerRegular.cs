@@ -26,10 +26,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
 
         public int Current
         {
-            get
-            {
-                return current;
-            }
+            get => current;
             set
             {
                 if (current != value)

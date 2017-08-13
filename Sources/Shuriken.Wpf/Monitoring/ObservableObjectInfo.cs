@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using JetBrains.Annotations;
-using Shuriken.Diagnostics;
 
 namespace Shuriken.Monitoring
 {
@@ -53,9 +52,7 @@ namespace Shuriken.Monitoring
             Debug.Assert(property.CanRead);
             Debug.Assert(property.GetIndexParameters().Length == 0);
 
-            DynamicMethod dynamicMethod;
-            ILGenerator generator;
-            CreateDynamicMethod(property, typeof(object), out dynamicMethod, out generator);
+            CreateDynamicMethod(property, typeof(object), out var dynamicMethod, out var generator);
 
             if (property.PropertyType.IsValueType)
             {
@@ -70,7 +67,7 @@ namespace Shuriken.Monitoring
         /// <remarks>
         /// For the <c>SampleProperty</c> property of a <c>SampleObject</c> the following dynamic method is generated:
         /// <code>
-        ///     static Command DynamicMethod(ObservableObject arg)
+        ///     static ParameterlessCommand DynamicMethod(ObservableObject arg)
         ///     {
         ///         return ((SampleObject)arg).SampleProperty;
         ///     }
@@ -78,19 +75,45 @@ namespace Shuriken.Monitoring
         /// </remarks>
         [Pure]
         [NotNull]
-        static Func<ObservableObject, Command> CreateCommandPropertyGetMethod([NotNull] PropertyInfo property)
+        static Func<ObservableObject, ParameterlessCommand> CreateParameterlessCommandPropertyGetMethod([NotNull] PropertyInfo property)
         {
             Debug.Assert(property.CanRead);
             Debug.Assert(property.GetIndexParameters().Length == 0);
-            Debug.Assert(property.PropertyType == typeof(Command));
+            Debug.Assert(property.PropertyType.IsSubclassOf(typeof(ParameterlessCommand)) || property.PropertyType == typeof(ParameterlessCommand));
 
-            DynamicMethod dynamicMethod;
-            ILGenerator generator;
-            CreateDynamicMethod(property, typeof(Command), out dynamicMethod, out generator);
+            CreateDynamicMethod(property, typeof(ParameterlessCommand), out var dynamicMethod, out var generator);
 
             generator.Emit(OpCodes.Ret);
 
-            return (Func<ObservableObject, Command>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, Command>));
+            return (Func<ObservableObject, ParameterlessCommand>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, ParameterlessCommand>));
+        }
+
+        /// <remarks>
+        /// For the <c>SampleProperty</c> property of a <c>SampleObject</c> the following dynamic method is generated:
+        /// <code>
+        ///     static CommandBase DynamicMethod(ObservableObject arg)
+        ///     {
+        ///         return ((SampleObject)arg).SampleProperty;
+        ///     }
+        /// </code>
+        /// </remarks>
+        [Pure]
+        [NotNull]
+        static Func<ObservableObject, CommandBase> CreateParameterizedCommandPropertyGetMethod([NotNull] PropertyInfo property)
+        {
+            Debug.Assert(property.CanRead);
+            Debug.Assert(property.GetIndexParameters().Length == 0);
+            Debug.Assert(property.PropertyType.IsGenericType);
+            Debug.Assert(
+                property.PropertyType.GetGenericTypeDefinition() == typeof(Command<>) ||
+                    property.PropertyType.GetGenericTypeDefinition() == typeof(AsyncCommand<>) ||
+                    property.PropertyType.GetGenericTypeDefinition() == typeof(ParameterizedCommand<>));
+
+            CreateDynamicMethod(property, typeof(CommandBase), out var dynamicMethod, out var generator);
+
+            generator.Emit(OpCodes.Ret);
+
+            return (Func<ObservableObject, CommandBase>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, CommandBase>));
         }
 
         [Pure]
@@ -146,9 +169,30 @@ namespace Shuriken.Monitoring
                         {
                             var propertyType = property.PropertyType;
 
-                            if (propertyType == typeof(Command))
+                            if (propertyType.IsSubclassOf(typeof(CommandBase)))
                             {
-                                list.Add(new CommandPropertyAccessor(property.Name, objectTypeName, CreateCommandPropertyGetMethod(property)));
+                                if (propertyType.IsSubclassOf(typeof(ParameterlessCommand)) || propertyType == typeof(ParameterlessCommand))
+                                {
+                                    list.Add(
+                                        new ParameterlessCommandPropertyAccessor(
+                                            property.Name,
+                                            objectTypeName,
+                                            CreateParameterlessCommandPropertyGetMethod(property)));
+                                }
+                                else
+                                {
+                                    Debug.Assert(propertyType.IsGenericType);
+                                    Debug.Assert(
+                                        propertyType.GetGenericTypeDefinition() == typeof(Command<>) ||
+                                            propertyType.GetGenericTypeDefinition() == typeof(AsyncCommand<>) ||
+                                            propertyType.GetGenericTypeDefinition() == typeof(ParameterizedCommand<>));
+
+                                    list.Add(
+                                        new ParameterizedCommandPropertyAccessor(
+                                            property.Name,
+                                            objectTypeName,
+                                            CreateParameterizedCommandPropertyGetMethod(property)));
+                                }
                             }
                             else
                             {
@@ -166,23 +210,7 @@ namespace Shuriken.Monitoring
                 });
 
             observableObjectReference = new WeakReference<ObservableObject>(observableObject);
-            valueBags = propertyAccessors.ConvertAll<ValueBag>(
-                propertyAccessor =>
-                {
-                    var propertyPropertyAccessor = propertyAccessor as PropertyPropertyAccessor;
-                    if (propertyPropertyAccessor != null)
-                    {
-                        return new PropertyValueBag(observableObject, propertyPropertyAccessor);
-                    }
-
-                    var commandPropertyAccessor = propertyAccessor as CommandPropertyAccessor;
-                    if (commandPropertyAccessor != null)
-                    {
-                        return new CommandValueBag(observableObject, commandPropertyAccessor);
-                    }
-
-                    throw new NotSupportedException();
-                });
+            valueBags = propertyAccessors.ConvertAll(propertyAccessor => propertyAccessor.CreateValueBag(observableObject));
         }
 
         public bool HasChangedProperties
@@ -207,8 +235,7 @@ namespace Shuriken.Monitoring
         /// </returns>
         public bool UpdateValues()
         {
-            ObservableObject observableObject;
-            if (observableObjectReference.TryGetTarget(out observableObject))
+            if (observableObjectReference.TryGetTarget(out var observableObject))
             {
                 foreach (var valueBag in valueBags)
                 {
@@ -241,8 +268,7 @@ namespace Shuriken.Monitoring
         /// </returns>
         public bool SendNotifications()
         {
-            ObservableObject observableObject;
-            if (observableObjectReference.TryGetTarget(out observableObject))
+            if (observableObjectReference.TryGetTarget(out var observableObject))
             {
                 foreach (var valueBag in valueBags)
                 {

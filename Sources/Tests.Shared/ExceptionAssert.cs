@@ -9,7 +9,6 @@ namespace Tests.Shared
 {
     [ExcludeFromCodeCoverage]
     [DebuggerStepThrough]
-    [SuppressMessage("ReSharper", "UncatchableException")]
     internal static class ExceptionAssert
     {
         [NotNull]

@@ -19,14 +19,7 @@ namespace Shuriken.Monitoring
         /// <param name="dispatcher">The WPF application dispatcher.</param>
         /// <exception cref="ArgumentNullException"><see cref="dispatcher"/> is <c>null</c>.</exception>
         public WpfNotificationContext([NotNull] Dispatcher dispatcher)
-        {
-            if (dispatcher == null)
-            {
-                throw new ArgumentNullException(nameof(dispatcher));
-            }
-
-            this.dispatcher = dispatcher;
-        }
+            => this.dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
 
         /// <inheritdoc />
         public void Invoke(Action action) => dispatcher.Invoke(action, DispatcherPriority.DataBind + 1);

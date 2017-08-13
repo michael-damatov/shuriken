@@ -20,18 +20,12 @@ namespace Tests.Shuriken.Wpf
             int valueTypeValue;
             string referenceTypeValue;
 
-            public SampleObservableObject(bool isThreadSafe) : base(isThreadSafe)
-            {
-                Assert.AreEqual(isThreadSafe, IsThreadSafe);
-            }
+            public SampleObservableObject(bool isThreadSafe) : base(isThreadSafe) => Assert.AreEqual(isThreadSafe, IsThreadSafe);
 
             [Observable]
             public int ValueTypeProp
             {
-                get
-                {
-                    return IsThreadSafe ? Interlocked.CompareExchange(ref valueTypeValue, 0, 0) : valueTypeValue;
-                }
+                get => IsThreadSafe ? Interlocked.CompareExchange(ref valueTypeValue, 0, 0) : valueTypeValue;
                 set
                 {
                     if (IsThreadSafe)
@@ -48,10 +42,7 @@ namespace Tests.Shuriken.Wpf
             [Observable]
             public virtual string ReferenceTypeProp
             {
-                get
-                {
-                    return IsThreadSafe ? Interlocked.CompareExchange(ref referenceTypeValue, null, null) : referenceTypeValue;
-                }
+                get => IsThreadSafe ? Interlocked.CompareExchange(ref referenceTypeValue, null, null) : referenceTypeValue;
                 set
                 {
                     if (IsThreadSafe)
@@ -67,6 +58,21 @@ namespace Tests.Shuriken.Wpf
 
             [Observable]
             public Command Command { get; set; }
+
+            [Observable]
+            public Command<int> Command2 { get; set; }
+
+            [Observable]
+            public AsyncCommand Command3 { get; set; }
+
+            [Observable]
+            public AsyncCommand<int> Command4 { get; set; }
+
+            [Observable]
+            public ParameterlessCommand Command5 { get; set; }
+
+            [Observable]
+            public ParameterizedCommand<int> Command6 { get; set; }
 
             [UsedImplicitly]
             public string this[int index] => null;
@@ -183,19 +189,81 @@ namespace Tests.Shuriken.Wpf
             }
         }
 
-        sealed class ObservableObjectWithPropertyFailingDueToInvalidEquals : ObservableObject
+        sealed class ObservableObjectWithFailingCommand<T> : ObservableObject
         {
-            public struct ValueWithInvalidEquals
+            [NotNull]
+            readonly Command<T> command;
+
+            readonly int maxNonFailingAccessCount;
+
+            int accessCount;
+
+            public ObservableObjectWithFailingCommand(bool isThreadSafe, int maxNonFailingAccessCount) : base(isThreadSafe)
             {
-                public override int GetHashCode()
+                Assert.AreEqual(isThreadSafe, IsThreadSafe);
+
+                this.maxNonFailingAccessCount = maxNonFailingAccessCount;
+
+                command = new Command<T>(arg => { }, CanExecuteCommand);
+            }
+
+            bool CanExecuteCommand(T arg)
+            {
+                if (IsThreadSafe)
+                {
+                    if (Interlocked.Increment(ref accessCount) >= maxNonFailingAccessCount)
+                    {
+                        throw new NotSupportedException();
+                    }
+
+                    return true;
+                }
+
+                accessCount++;
+
+                if (accessCount >= maxNonFailingAccessCount)
                 {
                     throw new NotSupportedException();
                 }
 
-                public override bool Equals(object obj)
+                return true;
+            }
+
+            [Observable]
+            [UsedImplicitly]
+            public Command<T> Command
+            {
+                get
                 {
-                    throw new NotSupportedException();
+                    if (IsThreadSafe)
+                    {
+                        if (Interlocked.Increment(ref accessCount) >= maxNonFailingAccessCount)
+                        {
+                            throw new NotSupportedException();
+                        }
+
+                        return command;
+                    }
+
+                    accessCount++;
+
+                    if (accessCount >= maxNonFailingAccessCount)
+                    {
+                        throw new NotSupportedException();
+                    }
+
+                    return command;
                 }
+            }
+        }
+
+        sealed class ObservableObjectWithPropertyFailingDueToInvalidEquals : ObservableObject
+        {
+            public struct ValueWithInvalidEquals
+            {
+                public override int GetHashCode() => throw new NotSupportedException();
+
+                public override bool Equals(object obj) => throw new NotSupportedException();
             }
 
             [Observable]
@@ -222,8 +290,6 @@ namespace Tests.Shuriken.Wpf
             public string this[int index] => null;
         }
 
-        sealed class ObservableObjectWithoutObservableProperties : ObservableObject { }
-
         sealed class LittleKnownObservableObjectWithoutObservableProperties : ObservableObject
         {
             [Observable]
@@ -231,6 +297,7 @@ namespace Tests.Shuriken.Wpf
             public string this[int index] => null;
         }
 
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         static async Task _Notifications_WithFailingPropertyChangeNotification<T>(
             [NotNull] T observableObject,
             [NotNull] Action<T> changeProperty,
@@ -273,54 +340,158 @@ namespace Tests.Shuriken.Wpf
 
         [TestMethod]
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        public async Task _Notifications()
+        public async Task _Notifications_Properties()
         {
             // value type property
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(false),
-                    observableObject => observableObject.ValueTypeProp++,
-                    nameof(SampleObservableObject.ValueTypeProp));
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(true),
-                    observableObject => observableObject.ValueTypeProp++,
-                    nameof(SampleObservableObject.ValueTypeProp));
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject => observableObject.ValueTypeProp++,
+                nameof(SampleObservableObject.ValueTypeProp));
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(true),
+                observableObject => observableObject.ValueTypeProp++,
+                nameof(SampleObservableObject.ValueTypeProp));
 
             // reference type property
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(false),
-                    observableObject => observableObject.ReferenceTypeProp += "a",
-                    nameof(SampleObservableObject.ReferenceTypeProp));
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(true),
-                    observableObject => observableObject.ReferenceTypeProp += "a",
-                    nameof(SampleObservableObject.ReferenceTypeProp));
-
-            // commands
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(false),
-                    observableObject => observableObject.Command = new Command(() => { }),
-                    nameof(SampleObservableObject.Command));
-
-            var threadAffineObservableObject = new SampleObservableObject(false);
-            threadAffineObservableObject.Command = new Command(() => { }, () => threadAffineObservableObject.ValueTypeProp % 2 == 1);
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    threadAffineObservableObject,
-                    observableObject => observableObject.ValueTypeProp++,
-                    new[] { nameof(SampleObservableObject.ValueTypeProp) },
-                    new[] { nameof(SampleObservableObject.Command) });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject => observableObject.ReferenceTypeProp += "a",
+                nameof(SampleObservableObject.ReferenceTypeProp));
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(true),
+                observableObject => observableObject.ReferenceTypeProp += "a",
+                nameof(SampleObservableObject.ReferenceTypeProp));
 
             // indexer
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new SampleObservableObject(false),
-                    observableObject => observableObject.NotifyIndexer(),
-                    Binding.IndexerName);
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject => observableObject.NotifyIndexer(),
+                Binding.IndexerName);
+        }
+
+        [TestMethod]
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        public async Task _Notifications_Command_Parameterless()
+        {
+            // property change notification
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject => observableObject.Command = new Command(() => { }),
+                nameof(SampleObservableObject.Command));
+
+            // change notification because of CanExecute changes
+            var threadAffineObservableObject = new SampleObservableObject(false);
+            threadAffineObservableObject.Command = new Command(() => { }, () => threadAffineObservableObject.ValueTypeProp % 2 == 1);
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                threadAffineObservableObject,
+                observableObject => observableObject.ValueTypeProp++,
+                new[] { nameof(SampleObservableObject.ValueTypeProp) },
+                new[] { nameof(SampleObservableObject.Command) });
+
+            // change notification because of CanExecute changes during the execution
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false) { Command = new Command(() => SpinWait.SpinUntil(() => false, 100)) },
+                observableObject => observableObject.Command.Execute(),
+                new string[] { },
+                new[] { nameof(SampleObservableObject.Command), nameof(SampleObservableObject.Command) });
+        }
+
+        [TestMethod]
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        public async Task _Notifications_Command_Parameterized()
+        {
+            // property change notification
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject => observableObject.Command2 = new Command<int>(arg => { }),
+                nameof(SampleObservableObject.Command2));
+
+            // change notification because of CanExecute changes during the execution
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false) { Command2 = new Command<int>(arg => SpinWait.SpinUntil(() => false, 100)) },
+                observableObject => observableObject.Command2.Execute(0),
+                new string[] { },
+                new[] { nameof(SampleObservableObject.Command2), nameof(SampleObservableObject.Command2) });
+        }
+
+        [TestMethod]
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        public async Task _Notifications_AsyncCommand_Parameterless()
+        {
+            // property change notification
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject =>
+                {
+                    observableObject.Command3 = new AsyncCommand(() => Task.CompletedTask);
+                    observableObject.Command5 = new AsyncCommand(() => Task.CompletedTask);
+                },
+                new[] { nameof(SampleObservableObject.Command3), nameof(SampleObservableObject.Command5) },
+                new string[] { });
+
+            // change notification because of CanExecute changes
+            var threadAffineObservableObject = new SampleObservableObject(false);
+            threadAffineObservableObject.Command3 = new AsyncCommand(
+                () => Task.CompletedTask,
+                () => threadAffineObservableObject.ValueTypeProp % 2 == 1);
+            threadAffineObservableObject.Command5 = new AsyncCommand(
+                () => Task.CompletedTask,
+                () => threadAffineObservableObject.ValueTypeProp % 2 == 1);
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                threadAffineObservableObject,
+                observableObject => observableObject.ValueTypeProp++,
+                new[] { nameof(SampleObservableObject.ValueTypeProp) },
+                new[] { nameof(SampleObservableObject.Command3), nameof(SampleObservableObject.Command5) });
+
+            // change notification because of CanExecute changes during the execution
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false)
+                {
+                    Command3 = new AsyncCommand(() => Task.Delay(100)),
+                    Command5 = new AsyncCommand(() => Task.Delay(100)),
+                },
+                observableObject =>
+                    Task.WhenAll(observableObject.Command3.Execute(), ((AsyncCommand)observableObject.Command5).Execute()).GetAwaiter().GetResult(),
+                new string[] { },
+                new[]
+                {
+                    nameof(SampleObservableObject.Command3), nameof(SampleObservableObject.Command3), nameof(SampleObservableObject.Command5),
+                    nameof(SampleObservableObject.Command5)
+                });
+        }
+
+        [TestMethod]
+        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        public async Task _Notifications_AsyncCommand_Parameterized()
+        {
+            // property change notification
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false),
+                observableObject =>
+                {
+                    observableObject.Command4 = new AsyncCommand<int>(arg => Task.CompletedTask);
+                    observableObject.Command6 = new AsyncCommand<int>(arg => Task.CompletedTask);
+                },
+                new[] { nameof(SampleObservableObject.Command4), nameof(SampleObservableObject.Command6) },
+                new string[] { });
+
+            // change notification because of CanExecute changes during the execution
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new SampleObservableObject(false)
+                {
+                    Command4 = new AsyncCommand<int>(arg => Task.Delay(100)),
+                    Command6 = new AsyncCommand<int>(arg => Task.Delay(100)),
+                },
+                observableObject =>
+                    Task.WhenAll(observableObject.Command4.Execute(0), ((AsyncCommand<int>)observableObject.Command6).Execute(0))
+                        .GetAwaiter()
+                        .GetResult(),
+                new string[] { },
+                new[]
+                {
+                    nameof(SampleObservableObject.Command4), nameof(SampleObservableObject.Command4), nameof(SampleObservableObject.Command6),
+                    nameof(SampleObservableObject.Command6)
+                });
         }
 
         [TestMethod]
@@ -332,21 +503,21 @@ namespace Tests.Shuriken.Wpf
                     InvalidNotificationContextMode.FailInvoke,
                     new SampleObservableObject(false),
                     observableObject => observableObject.ValueTypeProp++,
-                    "Prop",
+                    nameof(SampleObservableObject.ValueTypeProp),
                     false);
             await
                 ExecuteInApplicationMonitorScopeWithFailingNotificationContext<SampleObservableObject, OperationCanceledException>(
                     InvalidNotificationContextMode.FailInvokeAsync,
                     new SampleObservableObject(false),
                     observableObject => observableObject.ValueTypeProp++,
-                    "Prop",
+                    nameof(SampleObservableObject.ValueTypeProp),
                     false);
             await
                 ExecuteInApplicationMonitorScopeWithFailingNotificationContext<SampleObservableObject, OperationCanceledException>(
                     InvalidNotificationContextMode.InvokeAsyncFails,
                     new SampleObservableObject(false),
                     observableObject => observableObject.ValueTypeProp++,
-                    "Prop",
+                    nameof(SampleObservableObject.ValueTypeProp),
                     false);
             await
                 ExceptionAssert.Throws<InvalidOperationException>(
@@ -356,7 +527,7 @@ namespace Tests.Shuriken.Wpf
                                 InvalidNotificationContextMode.InvokeAsyncReturnsNull,
                                 new SampleObservableObject(false),
                                 observableObject => observableObject.ValueTypeProp++,
-                                "Prop"));
+                                nameof(SampleObservableObject.ValueTypeProp)));
         }
 
         [TestMethod]
@@ -371,7 +542,7 @@ namespace Tests.Shuriken.Wpf
                                 InvalidNotificationContextMode.FailInvoke,
                                 new SampleObservableObject(false),
                                 observableObject => observableObject.ValueTypeProp++,
-                                "Prop",
+                                nameof(SampleObservableObject.ValueTypeProp),
                                 false));
             await
                 ExceptionAssert.Throws<NotSupportedException>(
@@ -381,7 +552,7 @@ namespace Tests.Shuriken.Wpf
                                 InvalidNotificationContextMode.FailInvokeAsync,
                                 new SampleObservableObject(false),
                                 observableObject => observableObject.ValueTypeProp++,
-                                "Prop"));
+                                nameof(SampleObservableObject.ValueTypeProp)));
             await
                 ExceptionAssert.Throws<NotSupportedException>(
                     async () =>
@@ -390,7 +561,7 @@ namespace Tests.Shuriken.Wpf
                                 InvalidNotificationContextMode.InvokeAsyncFails,
                                 new SampleObservableObject(false),
                                 observableObject => observableObject.ValueTypeProp++,
-                                "Prop"));
+                                nameof(SampleObservableObject.ValueTypeProp)));
             await
                 ExceptionAssert.Throws<InvalidOperationException>(
                     async () =>
@@ -399,81 +570,133 @@ namespace Tests.Shuriken.Wpf
                                 InvalidNotificationContextMode.InvokeAsyncReturnsNull,
                                 new SampleObservableObject(false),
                                 observableObject => observableObject.ValueTypeProp++,
-                                "Prop"));
+                                nameof(SampleObservableObject.ValueTypeProp)));
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_PropertyFailsOnFirstAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(false, 1), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(true, 1), observableObject => { });
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_PropertyFailsOnSecondAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(false, 2), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(true, 2), observableObject => { });
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_PropertyFailsDueToInvalidImplementationOfEquals()
+            =>
+                await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                    new ObservableObjectWithPropertyFailingDueToInvalidEquals(),
+                    observableObject => { });
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_CommandFailsOnFirstAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 2), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 2), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(false, 2),
+                observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(true, 2),
+                observableObject => { });
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_CommandCanExecuteFailsOnFirstAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 3), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 3), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(false, 3),
+                observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(true, 3),
+                observableObject => { });
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_CommandFailsOnSecondAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 4), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 4), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(false, 4),
+                observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(true, 4),
+                observableObject => { });
+        }
+
+        [TestMethod]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_CommandCanExecuteFailsOnSecondAccess()
+        {
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 5), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 5), observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(false, 5),
+                observableObject => { });
+            await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                new ObservableObjectWithFailingCommand<int>(true, 5),
+                observableObject => { });
         }
 
         [TestMethod]
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        public async Task _Notifications_WithExceptionsWhileMonitoring()
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
+        public async Task _Notifications_WithExceptionsWhileMonitoring_RaisingChangeNotificationForCommandFails()
         {
-            // property fails on first access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(false, 1), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(true, 1), observableObject => { });
-
-            // property fails on second access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(false, 2), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingProperty(true, 2), observableObject => { });
-
-            // property fails due to invalid implementation of Equals
-            await
-                ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                    new ObservableObjectWithPropertyFailingDueToInvalidEquals(),
-                    observableObject => { });
-
-            // command fails on first access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 2), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 2), observableObject => { });
-
-            // command "CanExecute" fails on first access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 3), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 3), observableObject => { });
-
-            // command fails on second access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 4), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 4), observableObject => { });
-
-            // command "CanExecute" fails on second access
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(false, 5), observableObject => { });
-            await ObservableObjectAssert.RaisesPropertyChangeNotifications(new ObservableObjectWithFailingCommand(true, 5), observableObject => { });
-
-            // raising change notification for commands fails
-            EventHandler canExecuteChangedEventHandler = (sender, e) => { throw new NotSupportedException(); };
+            EventHandler canExecuteChangedEventHandler = (sender, e) => throw new NotSupportedException();
             var threadAffineObservableObject = new SampleObservableObject(false);
             threadAffineObservableObject.Command = new Command(() => { }, () => threadAffineObservableObject.ValueTypeProp % 2 == 1);
+            threadAffineObservableObject.Command4 = new AsyncCommand<int>(arg => Task.Delay(100));
             threadAffineObservableObject.Command.CanExecuteChanged += canExecuteChangedEventHandler;
+            threadAffineObservableObject.Command4.CanExecuteChanged += canExecuteChangedEventHandler;
             try
             {
-                await
-                    ObservableObjectAssert.RaisesPropertyChangeNotifications(
-                        threadAffineObservableObject,
-                        observableObject => observableObject.ValueTypeProp++,
-                        nameof(SampleObservableObject.ValueTypeProp));
+                await ObservableObjectAssert.RaisesPropertyChangeNotifications(
+                    threadAffineObservableObject,
+                    observableObject =>
+                    {
+                        observableObject.ValueTypeProp++;
+                        observableObject.Command4.Execute(0).GetAwaiter().GetResult();
+                    },
+                    nameof(SampleObservableObject.ValueTypeProp));
             }
             finally
             {
                 threadAffineObservableObject.Command.CanExecuteChanged -= canExecuteChangedEventHandler;
+                threadAffineObservableObject.Command4.CanExecuteChanged -= canExecuteChangedEventHandler;
             }
 
             await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
                 async monitorScope =>
                 {
                     // raising change notification for properties fails
-                    await
-                        _Notifications_WithFailingPropertyChangeNotification(
-                            new SampleObservableObject(false),
-                            observableObject => observableObject.ValueTypeProp++,
-                            "ValueTypeProp");
+                    await _Notifications_WithFailingPropertyChangeNotification(
+                        new SampleObservableObject(false),
+                        observableObject => observableObject.ValueTypeProp++,
+                        nameof(SampleObservableObject.ValueTypeProp));
 
                     // raising change notification for commands fails
-                    await
-                        _Notifications_WithFailingPropertyChangeNotification(
-                            new SampleObservableObject(false),
-                            observableObject => observableObject.Command = new Command(() => { }),
-                            "Command");
+                    await _Notifications_WithFailingPropertyChangeNotification(
+                        new SampleObservableObject(false),
+                        observableObject => observableObject.Command = new Command(() => { }),
+                        nameof(SampleObservableObject.Command));
+                    await _Notifications_WithFailingPropertyChangeNotification(
+                        new SampleObservableObject(false),
+                        observableObject => observableObject.Command2 = new Command<int>(arg => { }),
+                        nameof(SampleObservableObject.Command2));
                 });
         }
 
         [SuppressMessage("ReSharper", "RedundantAssignment")]
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         static void _Registration_GarbageCollectedObjects_Core()
         {
             PropertyChangedEventHandler eventHandler = (sender, e) => { };
@@ -495,13 +718,10 @@ namespace Tests.Shuriken.Wpf
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
 
-            SampleObservableObject target;
-            threadAffineWeakReference.TryGetTarget(out target);
-            Assert.IsNull(target);
-            threadSafeWeakReference.TryGetTarget(out target);
-            Assert.IsNull(target);
+            Assert.IsFalse(threadAffineWeakReference.TryGetTarget(out _));
+            Assert.IsFalse(threadSafeWeakReference.TryGetTarget(out _));
         }
 
         [TestMethod]
@@ -516,6 +736,7 @@ namespace Tests.Shuriken.Wpf
 
         [TestMethod]
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         public async Task _Registration_NotWellDefinedObjects()
         {
             PropertyChangedEventHandler eventHandler = (sender, args) => { };
@@ -528,10 +749,6 @@ namespace Tests.Shuriken.Wpf
                     var observableObjectNotWellDefined = new ObservableObjectNotWellDefined();
                     observableObjectNotWellDefined.PropertyChanged += eventHandler;
                     observableObjectNotWellDefined.PropertyChanged -= eventHandler;
-
-                    var observableObjectWithoutObservableProperties = new ObservableObjectWithoutObservableProperties();
-                    observableObjectWithoutObservableProperties.PropertyChanged += eventHandler;
-                    observableObjectWithoutObservableProperties.PropertyChanged -= eventHandler;
                 });
 
             var littleKnownObservableObjectWithoutObservableProperties = new LittleKnownObservableObjectWithoutObservableProperties();
@@ -540,6 +757,7 @@ namespace Tests.Shuriken.Wpf
         }
 
         [TestMethod]
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         public void _Registration_OffApplicationMonitorScope()
         {
             var observableObject = new SampleObservableObject(false);
@@ -559,6 +777,7 @@ namespace Tests.Shuriken.Wpf
 
         [TestMethod]
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
+        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         public async Task _Registration_MultipleTimes()
             => await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
                 async monitorScope =>

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Shuriken;
-using Shuriken.Monitoring;
 
 namespace Demo.Shuriken.Wpf.ViewModels
 {
@@ -14,8 +11,6 @@ namespace Demo.Shuriken.Wpf.ViewModels
         readonly SampleViewModel[] viewModels;
 
         int current;
-
-        IDisposable monitoringSuspension;
 
         public SampleViewModelContainer(int total)
         {
@@ -32,10 +27,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
         [Observable]
         public int Current
         {
-            get
-            {
-                return current;
-            }
+            get => current;
             set
             {
                 current = value;
@@ -43,38 +35,6 @@ namespace Demo.Shuriken.Wpf.ViewModels
                 for (var i = 0; i < viewModels.Length; i++)
                 {
                     viewModels[i].Data = i + current;
-                }
-            }
-        }
-
-        public bool IsMonitoringSuspended
-        {
-            get
-            {
-                return monitoringSuspension != null;
-            }
-            set
-            {
-                if (value)
-                {
-                    if (monitoringSuspension == null)
-                    {
-                        Debug.Assert(ApplicationMonitorScope.Current != null);
-
-                        monitoringSuspension = ApplicationMonitorScope.Current.Suspend();
-
-                        NotifyPropertyChange();
-                    }
-                }
-                else
-                {
-                    if (monitoringSuspension != null)
-                    {
-                        monitoringSuspension.Dispose();
-                        monitoringSuspension = null;
-
-                        NotifyPropertyChange();
-                    }
                 }
             }
         }

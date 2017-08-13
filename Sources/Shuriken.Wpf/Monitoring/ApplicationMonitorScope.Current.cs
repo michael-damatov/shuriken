@@ -4,11 +4,11 @@ namespace Shuriken.Monitoring
 {
     partial class ApplicationMonitorScope
     {
-        static Shuriken.Monitoring.ApplicationMonitorScope current;
+        static ApplicationMonitorScope current;
 
         /// <summary>
         /// Gets the current <see cref="Shuriken.Monitoring.ApplicationMonitorScope"/>.
         /// </summary>
-        public static Shuriken.Monitoring.ApplicationMonitorScope Current => Interlocked.CompareExchange(ref current, null, null);
+        public static ApplicationMonitorScope Current => Interlocked.CompareExchange(ref current, null, null);
     }
 }

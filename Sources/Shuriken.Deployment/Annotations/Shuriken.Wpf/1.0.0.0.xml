@@ -1,4 +1,4 @@
-<assembly name="Shuriken.Wpf">
+<assembly name="Shuriken.Wpf, Version=1.0.0.0">
   <member name="M:Shuriken.Command.#ctor(System.Action,System.Func{System.Boolean})">
     <parameter name="execute">
       <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />

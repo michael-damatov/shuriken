@@ -10,7 +10,7 @@ namespace Shuriken.Monitoring
     partial class ApplicationMonitorScope
     {
         [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-            Justification = "Disposing the ManualResetEventSlim would cause race conditions.")]
+            Justification = "Disposing private disposable fields would cause racing conditions.")]
         sealed class CountEvent
         {
             /// <remarks>
@@ -91,10 +91,7 @@ namespace Shuriken.Monitoring
                 }
             }
 
-            ~Suspension()
-            {
-                DisposeCore();
-            }
+            ~Suspension() => DisposeCore();
 
             void DisposeCore() => Interlocked.Exchange(ref countEvent, null)?.TryDecrement();
 

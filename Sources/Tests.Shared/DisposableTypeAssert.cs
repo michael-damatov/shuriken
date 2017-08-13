@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Tests.Shared
 {
     [ExcludeFromCodeCoverage]
-    internal static class DisposableAssert
+    internal static class DisposableTypeAssert
     {
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         public static void IsValid([NotNull] Func<IDisposable> factory, bool multipleInstancesAllowed = true)

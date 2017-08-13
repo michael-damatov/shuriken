@@ -17,6 +17,7 @@ namespace Tests.Shared
 
             static bool IsActive => Interlocked.CompareExchange(ref isDisabled, 0, 0) == 0;
 
+            [DebuggerStepThrough]
             public override void Fail(string message)
             {
                 if (IsActive)
@@ -25,6 +26,7 @@ namespace Tests.Shared
                 }
             }
 
+            [DebuggerStepThrough]
             public override void Fail(string message, string detailMessage)
             {
                 if (IsActive)

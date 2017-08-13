@@ -8,6 +8,10 @@ namespace Demo.Shuriken.Wpf
         [STAThread]
         static void Main()
         {
+#if DEBUG
+            EventListener.OperationalEvent += (_, e) => Debug.WriteLine(e.ToDebugMessage());
+#endif
+
             var app = new App();
             app.InitializeComponent();
 

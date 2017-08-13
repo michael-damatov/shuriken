@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -13,6 +14,8 @@ namespace Shuriken.Monitoring
     /// <remarks>
     /// If the scope is closed deterministically (e.g. by exiting the <c>using</c> block) any exception caused the scope to close is re-thrown.
     /// </remarks>
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "Disposing private disposable fields would cause racing conditions.")]
     public sealed partial class ApplicationMonitorScope
     {
         /// <remarks>

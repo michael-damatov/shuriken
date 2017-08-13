@@ -15,5 +15,8 @@ namespace Shuriken.Monitoring
 
         [NotNull]
         public string ObjectTypeName { get; }
+
+        [NotNull]
+        public abstract ValueBag CreateValueBag([NotNull] ObservableObject observableObject);
     }
 }

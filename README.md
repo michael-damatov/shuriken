@@ -1,4 +1,4 @@
-# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken) [![ReSharper-Gallery](https://img.shields.io/badge/resharper--gallery-v1.0.0-lightgrey.svg)](https://resharper-plugins.jetbrains.com/packages/Shuriken.Annotations)
+# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken) [![ReSharper-Gallery](https://img.shields.io/badge/resharper--gallery-v1.1.0-lightgrey.svg)](https://resharper-plugins.jetbrains.com/packages/Shuriken.Annotations)
 
 Fully automated MVVM library without code rewriting. There is no magic behind it: a background thread monitors object properties (explicitly annotated as `[Observable]`), checks their values by comparing with their previous values, and raises change notifications "in the name" of the object.
 
@@ -16,13 +16,13 @@ The library compares the current property values with their previous value and c
 
 ### Phase 3: Raising change notifications
 
-If the list of changed properties is not empty a single context switch is made to the UI thread to raise all change notifications. The change notifications are always raised in the UI thread even for objects that are known to be thread-safe.
+If the list of changed properties is not empty, a single context switch is made to the UI thread to raise all change notifications. The change notifications are always raised in the UI thread even for objects that are known to be thread-safe.
 
 ### Registration
 
 The _object type_ registration is triggered automatically when the `PropertyChanged` event is attached for the first time. The object type is scanned for public properties that are annotated with the `[Observable]` attribute. For each discovered property a static method is emitted. The scanning result is cached for that object type.
 
-When the first `PropertyChanged` event is attached the object is treated as _observed_. The library uses weak references to observed objects. When the last `PropertyChanged` event is detached the library stops the object observation.
+When the first `PropertyChanged` event is attached, the object is treated as _observed_. The library uses weak references to observed objects. When the last `PropertyChanged` event is detached, the library stops the object observation.
 
 ## Examples
 
@@ -83,7 +83,7 @@ static void Main()
 
 ## Major Benefits
 - No need to call `NotifyPropertyChange` in property setters, just annotate the property with `[Observable]` attribute. The library tracks property values, compares them with their previous value and issues property change notification (if needed) in the name of the object.
-- No need to to track internal dependencies between observable properties, i.e. "if the property `X` changes the property `Y` must be notified as well". This ensures less error-prone code.
+- No need to track internal dependencies between observable properties, i.e. "if the property `X` changes the property `Y` must be notified as well". This ensures less error-prone code.
 - No need to notify `Command` properties that the `CanExecute` method can return another value.
 
 ## Best Practices
@@ -95,7 +95,16 @@ static void Main()
 - use virtualization where possible
 - consider suspending when the app is minimized
 - do not annotate indexers with `[Observable]` attribute
-- the `[Observable]` annotation does nothing if the class doesn't derive from the `ObservableObject`
+
+See [In-depth look into the guidelines](docs/Guidelines.md)
+
+## Logging and Performance Monitoring
+
+The Shuriken library makes extensive use of the Event Tracing for Windows (ETW) for logging as well as for reporting performance.
+
+*Note:* when observed properties throw exceptions the monitoring is not interrupted, the exceptions are just logged. The same approach is also applied when command `CanExecute` or `Execute` methods fail. So it is strongly recommended to turn on event capturing and writing to the Output window (at least for debug sessions).
+
+See [In-depth look into logging and performance monitoring](docs/Etw.md)
 
 ## Installation
 Use the NuGet package manager to install the package.

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,6 +8,7 @@ namespace Tests.Shared
     [ExcludeFromCodeCoverage]
     internal static class Extensions
     {
+        [DebuggerStepThrough]
         [ContractAnnotation("false => stop", true)]
         public static void IsRequiredForTest(this bool precondition)
         {
