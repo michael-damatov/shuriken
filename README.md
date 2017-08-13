@@ -96,7 +96,7 @@ static void Main()
 - consider suspending when the app is minimized
 - do not annotate indexers with `[Observable]` attribute
 
-See [In-depth look into the guidelines](docs/Guidelines.md)
+See [In-depth look into the guidelines](Docs/Guidelines.md)
 
 ## Logging and Performance Monitoring
 
@@ -104,7 +104,7 @@ The Shuriken library makes extensive use of the Event Tracing for Windows (ETW) 
 
 *Note:* when observed properties throw exceptions the monitoring is not interrupted, the exceptions are just logged. The same approach is also applied when command `CanExecute` or `Execute` methods fail. So it is strongly recommended to turn on event capturing and writing to the Output window (at least for debug sessions).
 
-See [In-depth look into logging and performance monitoring](docs/Etw.md)
+See [In-depth look into logging and performance monitoring](Docs/Etw.md)
 
 ## Installation
 Use the NuGet package manager to install the package.
