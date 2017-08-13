@@ -1,6 +1,6 @@
 # Logging and Performance Monitoring
 
-The [Shuriken](../) library makes extensive use of the Event Tracing for Windows (ETW) for logging as well as for reporting performance.
+The [Shuriken](../README.md) library makes extensive use of the Event Tracing for Windows (ETW) for logging as well as for reporting performance.
 
 ## Logging
 

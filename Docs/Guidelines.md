@@ -1,6 +1,6 @@
 # Guidelines
 
-The [Shuriken](../) library provides the base class `ObservableObject` (which implements the `INotifyPropertyChanged` interface).
+The [Shuriken](../README.md) library provides the base class `ObservableObject` (which implements the `INotifyPropertyChanged` interface).
 
 In order to provide public observable properties (e.g. for binding) use the following guidelines to define properties:
 
