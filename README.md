@@ -1,4 +1,4 @@
-# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken) [![ReSharper-Gallery](https://img.shields.io/badge/resharper--gallery-v1.1.0-lightgrey.svg)](https://resharper-plugins.jetbrains.com/packages/Shuriken.Annotations)
+# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken) [![ReSharper Extension](https://img.shields.io/resharper/v/Shuriken.Annotations.svg?label=ReSharper%20Extension)](https://plugins.jetbrains.com/plugin/11800-shuriken-annotations)
 
 Fully automated MVVM library without code rewriting. There is no magic behind it: a background thread monitors object properties (explicitly annotated as `[Observable]`), checks their values by comparing with their previous values, and raises change notifications "in the name" of the object.
 

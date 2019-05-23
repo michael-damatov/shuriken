@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using Shuriken.Diagnostics;
 using Shuriken.Monitoring;
 
 namespace Demo.Shuriken.Wpf
