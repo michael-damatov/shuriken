@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Windows.Markup;
 
 // General Information about an assembly is controlled through the following
@@ -20,6 +21,7 @@ using System.Windows.Markup;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(true)]
+[assembly: AllowPartiallyTrustedCallers]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("50F3B06C-90C5-4BFA-8652-F635959B7CFE")]
