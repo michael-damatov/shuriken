@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Windows.Markup;
 
 // General Information about an assembly is controlled through the following
@@ -20,6 +21,7 @@ using System.Windows.Markup;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(true)]
+[assembly: AllowPartiallyTrustedCallers]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("50F3B06C-90C5-4BFA-8652-F635959B7CFE")]
@@ -34,8 +36,8 @@ using System.Windows.Markup;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.0")]
+[assembly: AssemblyVersion("1.3.0.0")]
+[assembly: AssemblyFileVersion("1.3.0")]
 
 [assembly: XmlnsDefinition("http://schemas.shuriken/view-models", @"Shuriken")]
 [assembly: XmlnsPrefix("http://schemas.shuriken/view-models", "sh")]
