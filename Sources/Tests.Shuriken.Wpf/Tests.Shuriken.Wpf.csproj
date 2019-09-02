@@ -80,6 +80,7 @@
     <Compile Include="CommandBaseTests.cs" />
     <Compile Include="CommandOptionsTests.cs" />
     <Compile Include="EventListenerTests.cs" />
+    <Compile Include="ObservableObjectTests.cs" />
     <Compile Include="ParameterizedCommandTests.cs" />
     <Compile Include="ParameterlessCommandTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

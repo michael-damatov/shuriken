@@ -49,16 +49,15 @@ namespace Shuriken.Monitoring
             }
         }
 
-        public override bool HasValidValue => isValueValid && isIsExecutingValid;
-
-        public override bool HasChangedValue => isValueChanged || isIsExecutingChanged;
-
-        public override void UpdateNewValue(ObservableObject observableObject)
+        [MustUseReturnValue]
+        CommandBase GetCurrentValue(ObservableObject observableObject)
         {
             try
             {
-                newValue = propertyAccessor.Getter(observableObject);
+                var value = propertyAccessor.Getter(observableObject);
+
                 isValueValid = true;
+                return value;
             }
             catch (Exception e)
             {
@@ -68,13 +67,38 @@ namespace Shuriken.Monitoring
                 }
 
                 isValueValid = false;
+                return default;
             }
+        }
 
-            if (isValueValid && newValue != null)
+        [MustUseReturnValue]
+        bool GetCurrentIsExecuting([NotNull] CommandBase value)
+        {
+            var isExecuting = value.RunningExecution != null;
+
+            isIsExecutingValid = true;
+
+            return isExecuting;
+        }
+
+        public override bool HasValidValue => isValueValid && isIsExecutingValid;
+
+        public override bool HasChangedValue => isValueChanged || isIsExecutingChanged;
+
+        public override void UpdateNewValue(ObservableObject observableObject)
+        {
+            var value = GetCurrentValue(observableObject);
+            if (isValueValid)
             {
-                newIsExecuting = newValue.RunningExecution != null;
+                newValue = value;
 
-                isIsExecutingValid = true;
+                if (value != null)
+                {
+                    var isExecuting = GetCurrentIsExecuting(value);
+
+                    Debug.Assert(isIsExecutingValid);
+                    newIsExecuting = isExecuting;
+                }
             }
         }
 
@@ -84,22 +108,7 @@ namespace Shuriken.Monitoring
             Debug.Assert(isIsExecutingValid);
 
             isValueChanged = currentValue != newValue;
-
-            if (isValueChanged)
-            {
-                currentValue = newValue;
-                isIsExecutingChanged = true;
-                currentIsExecuting = newIsExecuting;
-            }
-            else
-            {
-                isIsExecutingChanged = currentIsExecuting != newIsExecuting;
-
-                if (isIsExecutingChanged)
-                {
-                    currentIsExecuting = newIsExecuting;
-                }
-            }
+            isIsExecutingChanged = isValueChanged || currentIsExecuting != newIsExecuting;
 
             newValue = null;
             newIsExecuting = false;
@@ -122,6 +131,20 @@ namespace Shuriken.Monitoring
                 finally
                 {
                     isValueChanged = false;
+
+                    var value = GetCurrentValue(observableObject);
+                    if (isValueValid)
+                    {
+                        currentValue = value;
+
+                        if (value != null)
+                        {
+                            var isExecuting = GetCurrentIsExecuting(value);
+
+                            Debug.Assert(isIsExecutingValid);
+                            currentIsExecuting = isExecuting;
+                        }
+                    }
                 }
             }
 
@@ -143,6 +166,14 @@ namespace Shuriken.Monitoring
                 finally
                 {
                     isIsExecutingChanged = false;
+
+                    if (currentValue != null)
+                    {
+                        var isExecuting = GetCurrentIsExecuting(currentValue);
+
+                        Debug.Assert(isIsExecutingValid);
+                        currentIsExecuting = isExecuting;
+                    }
                 }
             }
         }
