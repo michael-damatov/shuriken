@@ -33,16 +33,15 @@ namespace Shuriken.Monitoring
             }
         }
 
-        public override bool HasValidValue => isValueValid;
-
-        public override bool HasChangedValue => isValueChanged;
-
-        public override void UpdateNewValue(ObservableObject observableObject)
+        [MustUseReturnValue]
+        object GetCurrentValue(ObservableObject observableObject)
         {
             try
             {
-                newValue = propertyAccessor.Getter(observableObject);
+                var value = propertyAccessor.Getter(observableObject);
+
                 isValueValid = true;
+                return value;
             }
             catch (Exception e)
             {
@@ -52,6 +51,20 @@ namespace Shuriken.Monitoring
                 }
 
                 isValueValid = false;
+                return default;
+            }
+        }
+
+        public override bool HasValidValue => isValueValid;
+
+        public override bool HasChangedValue => isValueChanged;
+
+        public override void UpdateNewValue(ObservableObject observableObject)
+        {
+            var value = GetCurrentValue(observableObject);
+            if (isValueValid)
+            {
+                newValue = value;
             }
         }
 
@@ -76,10 +89,6 @@ namespace Shuriken.Monitoring
                 }
             }
 
-            if (isValueChanged)
-            {
-                currentValue = newValue;
-            }
             newValue = null;
         }
 
@@ -98,6 +107,12 @@ namespace Shuriken.Monitoring
             finally
             {
                 isValueChanged = false;
+
+                var value = GetCurrentValue(observableObject);
+                if (isValueValid)
+                {
+                    currentValue = value;
+                }
             }
         }
     }
