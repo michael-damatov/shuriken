@@ -60,16 +60,15 @@ namespace Shuriken.Monitoring
             }
         }
 
-        public override bool HasValidValue => isValueValid && isCanExecuteValid;
-
-        public override bool HasChangedValue => isValueChanged || isCanExecuteChanged;
-
-        public override void UpdateNewValue(ObservableObject observableObject)
+        [MustUseReturnValue]
+        ParameterlessCommand GetCurrentValue(ObservableObject observableObject)
         {
             try
             {
-                newValue = propertyAccessor.Getter(observableObject);
+                var value = propertyAccessor.Getter(observableObject);
+
                 isValueValid = true;
+                return value;
             }
             catch (Exception e)
             {
@@ -79,28 +78,54 @@ namespace Shuriken.Monitoring
                 }
 
                 isValueValid = false;
+                return default;
             }
+        }
 
-            if (isValueValid && newValue != null)
+        [MustUseReturnValue]
+        bool GetCurrentGetExecute([NotNull] ParameterlessCommand value)
+        {
+            try
             {
-                try
-                {
-                    newCanExecute = newValue.CanExecute();
+                var canExecute = value.CanExecute();
 
-                    isCanExecuteValid = true;
-                }
-                catch (Exception e)
+                isCanExecuteValid = true;
+                return canExecute;
+            }
+            catch (Exception e)
+            {
+                if (isCanExecuteValid)
                 {
+                    EventSource.Log.UnableSubsequentlyToInvokeCommandMethod(
+                        propertyAccessor.ObjectTypeName,
+                        propertyAccessor.Name,
+                        nameof(ParameterlessCommand.CanExecute),
+                        e.ToString());
+                }
+
+                isCanExecuteValid = false;
+                return default;
+            }
+        }
+
+        public override bool HasValidValue => isValueValid && isCanExecuteValid;
+
+        public override bool HasChangedValue => isValueChanged || isCanExecuteChanged;
+
+        public override void UpdateNewValue(ObservableObject observableObject)
+        {
+            var value = GetCurrentValue(observableObject);
+            if (isValueValid)
+            {
+                newValue = value;
+
+                if (value != null)
+                {
+                    var canExecute = GetCurrentGetExecute(value);
                     if (isCanExecuteValid)
                     {
-                        EventSource.Log.UnableSubsequentlyToInvokeCommandMethod(
-                            propertyAccessor.ObjectTypeName,
-                            propertyAccessor.Name,
-                            nameof(ParameterlessCommand.CanExecute),
-                            e.ToString());
+                        newCanExecute = canExecute;
                     }
-
-                    isCanExecuteValid = false;
                 }
             }
         }
@@ -111,22 +136,7 @@ namespace Shuriken.Monitoring
             Debug.Assert(isCanExecuteValid);
 
             isValueChanged = currentValue != newValue;
-
-            if (isValueChanged)
-            {
-                currentValue = newValue;
-                isCanExecuteChanged = true;
-                currentCanExecute = newCanExecute;
-            }
-            else
-            {
-                isCanExecuteChanged = currentCanExecute != newCanExecute;
-
-                if (isCanExecuteChanged)
-                {
-                    currentCanExecute = newCanExecute;
-                }
-            }
+            isCanExecuteChanged = isValueChanged || currentCanExecute != newCanExecute;
 
             newValue = null;
             newCanExecute = false;
@@ -149,6 +159,21 @@ namespace Shuriken.Monitoring
                 finally
                 {
                     isValueChanged = false;
+
+                    var value = GetCurrentValue(observableObject);
+                    if (isValueValid)
+                    {
+                        currentValue = value;
+
+                        if (value != null)
+                        {
+                            var canExecute = GetCurrentGetExecute(value);
+                            if (isCanExecuteValid)
+                            {
+                                currentCanExecute = canExecute;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -170,6 +195,16 @@ namespace Shuriken.Monitoring
                 finally
                 {
                     isCanExecuteChanged = false;
+
+                    var value = currentValue;
+                    if (value != null)
+                    {
+                        var canExecute = GetCurrentGetExecute(value);
+                        if (isCanExecuteValid)
+                        {
+                            currentCanExecute = canExecute;
+                        }
+                    }
                 }
             }
         }
