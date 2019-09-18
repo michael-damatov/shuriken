@@ -150,11 +150,11 @@ namespace Shuriken.Monitoring
 
             if (isIsExecutingChanged)
             {
-                Debug.Assert(currentValue != null);
+                var value = currentValue;
 
                 try
                 {
-                    currentValue.NotifyCanExecuteChanged();
+                    value?.NotifyCanExecuteChanged();
                 }
                 catch (Exception e)
                 {
@@ -167,9 +167,9 @@ namespace Shuriken.Monitoring
                 {
                     isIsExecutingChanged = false;
 
-                    if (currentValue != null)
+                    if (value != null)
                     {
-                        var isExecuting = GetCurrentIsExecuting(currentValue);
+                        var isExecuting = GetCurrentIsExecuting(value);
 
                         Debug.Assert(isIsExecutingValid);
                         currentIsExecuting = isExecuting;

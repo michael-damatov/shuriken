@@ -1,0 +1,111 @@
+<assembly name="Shuriken.Wpf, Version=1.3.2.0">
+  <member name="M:Shuriken.AsyncCommand.#ctor(System.Func{System.Threading.Tasks.Task},System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.AsyncCommand.#ctor(System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.AsyncCommand.#ctor(System.Func{Shuriken.CommandExecutionController,System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.AsyncCommand`1.#ctor(System.Func{`0,System.Threading.Tasks.Task},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.AsyncCommand`1.#ctor(System.Func{`0,System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.AsyncCommand`1.#ctor(System.Func{`0,Shuriken.CommandExecutionController,System.Threading.CancellationToken,System.Threading.Tasks.Task},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command.#ctor(System.Action,System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command.#ctor(System.Action{System.Threading.CancellationToken},System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command.#ctor(System.Action{Shuriken.CommandExecutionController,System.Threading.CancellationToken},System.Func{System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command`1.#ctor(System.Action{`0},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command`1.#ctor(System.Action{`0,System.Threading.CancellationToken},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Command`1.#ctor(System.Action{`0,Shuriken.CommandExecutionController,System.Threading.CancellationToken},System.Func{`0,System.Boolean},Shuriken.CommandOptions)">
+    <parameter name="execute">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="P:Shuriken.CommandBase.Options">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="P:Shuriken.CommandExecutionController.Execution">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.ParameterizedCommand`1.CanExecute(`0)">
+    <attribute ctor="M:JetBrains.Annotations.PureAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.ParameterlessCommand.CanExecute">
+    <attribute ctor="M:JetBrains.Annotations.PureAttribute.#ctor" />
+  </member>
+  <member name="P:Shuriken.RunningCommandExecution.CancelCommand">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.Diagnostics.EventListener.ToDebugMessage(System.Diagnostics.Tracing.EventWrittenEventArgs)">
+    <attribute ctor="M:JetBrains.Annotations.PureAttribute.#ctor" />
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.Monitoring.ApplicationMonitorScope.#ctor(Shuriken.Monitoring.INotificationContext)">
+    <parameter name="notificationContext">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="P:Shuriken.Monitoring.ApplicationMonitorScope.NotificationContext">
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.Monitoring.ApplicationMonitorScope.Suspend">
+    <attribute ctor="M:JetBrains.Annotations.MustUseReturnValueAttribute.#ctor" />
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+  </member>
+  <member name="M:Shuriken.Monitoring.INotificationContext.Invoke(System.Action)">
+    <parameter name="action">
+      <attribute ctor="M:JetBrains.Annotations.InstantHandleAttribute.#ctor" />
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Monitoring.INotificationContext.InvokeAsync(System.Action)">
+    <attribute ctor="M:JetBrains.Annotations.PureAttribute.#ctor" />
+    <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    <parameter name="action">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+  <member name="M:Shuriken.Monitoring.WpfNotificationContext.#ctor(System.Windows.Threading.Dispatcher)">
+    <parameter name="dispatcher">
+      <attribute ctor="M:JetBrains.Annotations.NotNullAttribute.#ctor" />
+    </parameter>
+  </member>
+</assembly>
