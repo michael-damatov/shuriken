@@ -179,11 +179,11 @@ namespace Shuriken.Monitoring
 
             if (isCanExecuteChanged)
             {
-                Debug.Assert(currentValue != null);
+                var value = currentValue;
 
                 try
                 {
-                    currentValue.NotifyCanExecuteChanged();
+                    value?.NotifyCanExecuteChanged();
                 }
                 catch (Exception e)
                 {
@@ -196,7 +196,6 @@ namespace Shuriken.Monitoring
                 {
                     isCanExecuteChanged = false;
 
-                    var value = currentValue;
                     if (value != null)
                     {
                         var canExecute = GetCurrentGetExecute(value);
