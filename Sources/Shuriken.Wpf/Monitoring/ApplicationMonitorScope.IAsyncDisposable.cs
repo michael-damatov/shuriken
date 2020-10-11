@@ -1,20 +1,33 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NETCOREAPP
+using ValueTask = System.Threading.Tasks.Task;
+#endif
+
 namespace Shuriken.Monitoring
 {
-    partial class ApplicationMonitorScope
+    partial class ApplicationMonitorScope : IDisposable
+#if NETCOREAPP
+        , IAsyncDisposable
+#endif
     {
-        /// <summary>
-        /// Finalizes an instance of the <see cref="Shuriken.Monitoring.ApplicationMonitorScope"/> class.
-        /// </summary>
-        ~ApplicationMonitorScope() => Dispose(false).GetAwaiter().GetResult();
+        static void Wait(ValueTask task)
+        {
+#if NETCOREAPP
+            task.AsTask().GetAwaiter().GetResult();
+#else
+            task.GetAwaiter().GetResult();
+#endif
+        }
 
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "cancellation",
-            Justification = "Disposing private disposable fields would cause racing conditions.")]
-        async Task Dispose(bool disposing)
+        /// <summary>
+        /// Finalizes an instance of the <see cref="ApplicationMonitorScope"/> class.
+        /// </summary>
+        ~ApplicationMonitorScope() => Wait(Dispose(false));
+
+        async ValueTask Dispose(bool disposing)
         {
             try
             {
@@ -35,10 +48,11 @@ namespace Shuriken.Monitoring
             }
         }
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public async Task Dispose()
+        /// <inheritdoc />
+        public void Dispose() => Wait(DisposeAsync());
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
         {
             await Dispose(true).ConfigureAwait(false);
             GC.SuppressFinalize(this);

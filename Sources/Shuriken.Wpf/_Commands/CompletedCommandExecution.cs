@@ -8,16 +8,16 @@ namespace Shuriken
     /// </summary>
     public sealed class CompletedCommandExecution
     {
-        internal CompletedCommandExecution(CompletedCommandExecutionState state, float progress, Exception exception)
+        internal CompletedCommandExecution(CompletedCommandExecutionState state, float progress, Exception? exception)
         {
             Debug.Assert(
                 state == CompletedCommandExecutionState.Done && Math.Abs(progress - 1f) < float.Epsilon && exception == null ||
-                    state == CompletedCommandExecutionState.Canceled && progress >= 0f && progress <= 1f && exception == null ||
-                    state == CompletedCommandExecutionState.Faulted &&
-                        progress >= 0f &&
-                        progress <= 1f &&
-                        exception != null &&
-                        !(exception is OperationCanceledException));
+                state == CompletedCommandExecutionState.Canceled && progress >= 0f && progress <= 1f && exception == null ||
+                state == CompletedCommandExecutionState.Faulted &&
+                progress >= 0f &&
+                progress <= 1f &&
+                exception != null &&
+                !(exception is OperationCanceledException));
 
             State = state;
             Progress = progress;
@@ -44,6 +44,6 @@ namespace Shuriken
         /// <remarks>
         /// The property can never be an <see cref="OperationCanceledException"/>.
         /// </remarks>
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
     }
 }

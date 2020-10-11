@@ -17,14 +17,18 @@ namespace Demo.Shuriken.Wpf
             var app = new App();
             app.InitializeComponent();
 
-            var applicationMonitorScope = new ApplicationMonitorScope(new WpfNotificationContext(app.Dispatcher));
+            var applicationMonitorScope = new ApplicationMonitorScope(new WpfNotificationContext(app.Dispatcher!));
             try
             {
                 app.Run();
             }
             finally
             {
-                applicationMonitorScope.Dispose().GetAwaiter().GetResult();
+#if NETCOREAPP
+                applicationMonitorScope.DisposeAsync().AsTask().GetAwaiter().GetResult();
+#else
+                applicationMonitorScope.DisposeAsync().GetAwaiter().GetResult();
+#endif
             }
         }
     }

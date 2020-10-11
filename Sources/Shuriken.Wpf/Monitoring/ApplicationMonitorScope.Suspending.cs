@@ -16,9 +16,9 @@ namespace Shuriken.Monitoring
             /// <remarks>
             /// The field is also used as sync root for <c>lock</c> statements.
             /// </remarks>
-            [NotNull]
             readonly ManualResetEventSlim manualResetEvent = new ManualResetEventSlim(true);
 
+            [NonNegativeValue]
             int count;
 
             /// <exception cref="InvalidOperationException">Maximum suspension depth has been exceeded.</exception>
@@ -58,6 +58,10 @@ namespace Shuriken.Monitoring
                 }
             }
 
+            [SuppressMessage(
+                "ReSharper",
+                "InconsistentlySynchronizedField",
+                Justification = "The field should not be used inside synchronized block.")]
             public void WaitForZeroOrCancellation(CancellationToken cancellationToken)
             {
                 Debug.Assert(cancellationToken.CanBeCanceled);
@@ -72,10 +76,10 @@ namespace Shuriken.Monitoring
 
         sealed class Suspension : IDisposable
         {
-            CountEvent countEvent;
+            CountEvent? countEvent;
 
             /// <exception cref="InvalidOperationException">Maximum suspension depth has been exceeded.</exception>
-            public Suspension([NotNull] CountEvent countEventForSuspensions)
+            public Suspension(CountEvent countEventForSuspensions)
             {
                 Interlocked.Exchange(ref countEvent, countEventForSuspensions);
 

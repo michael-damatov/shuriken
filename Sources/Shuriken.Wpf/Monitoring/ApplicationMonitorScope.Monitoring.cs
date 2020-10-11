@@ -12,15 +12,13 @@ namespace Shuriken.Monitoring
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "LINQ queries are avoided to reduce GC load.")]
     partial class ApplicationMonitorScope
     {
-        struct Sets
+        readonly struct Sets
         {
-            [ItemNotNull]
-            readonly HashSet<ObservableObjectInfo> threadAffine;
+            readonly HashSet<ObservableObjectInfo>? threadAffine;
 
-            [ItemNotNull]
-            readonly HashSet<ObservableObjectInfo> threadSafe;
+            readonly HashSet<ObservableObjectInfo>? threadSafe;
 
-            public Sets([NotNull] HashSet<ObservableObjectInfo> threadAffine, [NotNull] HashSet<ObservableObjectInfo> threadSafe)
+            public Sets(HashSet<ObservableObjectInfo> threadAffine, HashSet<ObservableObjectInfo> threadSafe)
             {
                 Debug.Assert(threadAffine.Count == 0);
                 Debug.Assert(threadSafe.Count == 0);
@@ -30,59 +28,45 @@ namespace Shuriken.Monitoring
                 this.threadSafe = threadSafe;
             }
 
-            [NotNull]
-            [ItemNotNull]
-            public HashSet<ObservableObjectInfo> ThreadAffine
-            {
-                get
-                {
-                    Debug.Assert(threadAffine != null);
+            public HashSet<ObservableObjectInfo> ThreadAffine => threadAffine!;
 
-                    return threadAffine;
-                }
-            }
-
-            [NotNull]
-            [ItemNotNull]
-            public HashSet<ObservableObjectInfo> ThreadSafe
-            {
-                get
-                {
-                    Debug.Assert(threadSafe != null);
-
-                    return threadSafe;
-                }
-            }
+            public HashSet<ObservableObjectInfo> ThreadSafe => threadSafe!;
         }
 
-        struct Lists
+        readonly struct Lists
         {
-            public static void LogPerformanceLists(int capacityThreadAffine, int countThreadAffine, int capacityThreadSafe, int countThreadSafe)
+            public static void LogPerformanceLists(
+                [NonNegativeValue] int capacityThreadAffine,
+                [NonNegativeValue] int countThreadAffine,
+                [NonNegativeValue] int capacityThreadSafe,
+                [NonNegativeValue] int countThreadSafe)
                 => EventSource.Log.PerformanceLists(capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
 
             public static void LogPerformanceListsWithChangedProperties(
-                    int capacityThreadAffine,
-                    int countThreadAffine,
-                    int capacityThreadSafe,
-                    int countThreadSafe)
-                => EventSource.Log.PerformanceListsWithChangedProperties(capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
+                [NonNegativeValue] int capacityThreadAffine,
+                [NonNegativeValue] int countThreadAffine,
+                [NonNegativeValue] int capacityThreadSafe,
+                [NonNegativeValue] int countThreadSafe)
+                => EventSource.Log.PerformanceListsWithChangedProperties(
+                    capacityThreadAffine,
+                    countThreadAffine,
+                    capacityThreadSafe,
+                    countThreadSafe);
 
             public static void LogPerformanceListsWithItemsToBeRemoved(
-                    int capacityThreadAffine,
-                    int countThreadAffine,
-                    int capacityThreadSafe,
-                    int countThreadSafe)
+                [NonNegativeValue] int capacityThreadAffine,
+                [NonNegativeValue] int countThreadAffine,
+                [NonNegativeValue] int capacityThreadSafe,
+                [NonNegativeValue] int countThreadSafe)
                 => EventSource.Log.PerformanceListsWithItemsToBeRemoved(capacityThreadAffine, countThreadAffine, capacityThreadSafe, countThreadSafe);
 
-            readonly Action<int, int, int, int> logPerformance;
+            readonly Action<int, int, int, int>? logPerformance;
 
-            [ItemNotNull]
-            readonly List<ObservableObjectInfo> threadAffine;
+            readonly List<ObservableObjectInfo>? threadAffine;
 
-            [ItemNotNull]
-            readonly List<ObservableObjectInfo> threadSafe;
+            readonly List<ObservableObjectInfo>? threadSafe;
 
-            public Lists([NotNull] Action<int, int, int, int> logPerformance)
+            public Lists(Action<int, int, int, int> logPerformance)
             {
                 this.logPerformance = logPerformance;
 
@@ -90,29 +74,9 @@ namespace Shuriken.Monitoring
                 threadSafe = new List<ObservableObjectInfo>();
             }
 
-            [NotNull]
-            [ItemNotNull]
-            List<ObservableObjectInfo> ThreadAffine
-            {
-                get
-                {
-                    Debug.Assert(threadAffine != null);
+            List<ObservableObjectInfo> ThreadAffine => threadAffine!;
 
-                    return threadAffine;
-                }
-            }
-
-            [NotNull]
-            [ItemNotNull]
-            List<ObservableObjectInfo> ThreadSafe
-            {
-                get
-                {
-                    Debug.Assert(threadSafe != null);
-
-                    return threadSafe;
-                }
-            }
+            List<ObservableObjectInfo> ThreadSafe => threadSafe!;
 
             public bool AreEmpty => ThreadAffine.Count == 0 && ThreadSafe.Count == 0;
 
@@ -131,7 +95,7 @@ namespace Shuriken.Monitoring
             /// <exception cref="InvalidOperationException">
             ///     The <see cref="INotificationContext.InvokeAsync"/> method of the <see cref="INotificationContext"/> object returns <c>null</c>.
             /// </exception>
-            public void UpdateValues([NotNull] INotificationContext notificationContext, Lists listsWithItemsToBeRemoved)
+            public void UpdateValues(INotificationContext notificationContext, Lists listsWithItemsToBeRemoved)
             {
                 var local = this;
                 var threadAffineUpdates = notificationContext.InvokeAsync(
@@ -165,6 +129,7 @@ namespace Shuriken.Monitoring
                 threadAffineUpdates.GetAwaiter().GetResult();
             }
 
+            [NonNegativeValue]
             public int AnalyzeValues()
             {
                 var monitoredProperties = 0;
@@ -200,7 +165,7 @@ namespace Shuriken.Monitoring
                 }
             }
 
-            public void SendNotifications([NotNull] INotificationContext notificationContext, Lists listsWithItemsToBeRemoved)
+            public void SendNotifications(INotificationContext notificationContext, Lists listsWithItemsToBeRemoved)
             {
                 if (ThreadAffine.Count == 0 && ThreadSafe.Count == 0)
                 {
@@ -236,18 +201,12 @@ namespace Shuriken.Monitoring
             }
 
             [Conditional("TRACE")]
-            public void LogPerformance()
-            {
-                Debug.Assert(logPerformance != null);
-
-                logPerformance(ThreadAffine.Capacity, ThreadAffine.Count, ThreadSafe.Capacity, ThreadSafe.Count);
-            }
+            public void LogPerformance() => logPerformance!(ThreadAffine.Capacity, ThreadAffine.Count, ThreadSafe.Capacity, ThreadSafe.Count);
         }
 
         /// <remarks>
         /// Serves also as the sync root for <see cref="observableObjectInfos"/>.
         /// </remarks>
-        [NotNull]
         readonly ConditionalWeakTable<ObservableObject, ObservableObjectInfo> observableObjectTable =
             new ConditionalWeakTable<ObservableObject, ObservableObjectInfo>();
 
@@ -362,11 +321,9 @@ namespace Shuriken.Monitoring
             }
         }
 
-        internal void Register([NotNull] ObservableObject observableObject)
+        internal void Register(ObservableObject observableObject)
         {
             var observableObjectInfo = observableObjectTable.GetValue(observableObject, o => new ObservableObjectInfo(o));
-
-            Debug.Assert(observableObjectInfo != null);
 
             var set = observableObject.IsThreadSafe ? observableObjectInfos.ThreadSafe : observableObjectInfos.ThreadAffine;
 
@@ -376,10 +333,9 @@ namespace Shuriken.Monitoring
             }
         }
 
-        internal void Unregister([NotNull] ObservableObject observableObject)
+        internal void Unregister(ObservableObject observableObject)
         {
-            ObservableObjectInfo observableObjectInfo;
-            if (observableObjectTable.TryGetValue(observableObject, out observableObjectInfo))
+            if (observableObjectTable.TryGetValue(observableObject, out var observableObjectInfo))
             {
                 var set = observableObject.IsThreadSafe ? observableObjectInfos.ThreadSafe : observableObjectInfos.ThreadAffine;
 

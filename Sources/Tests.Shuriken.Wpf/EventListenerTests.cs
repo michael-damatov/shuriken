@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shuriken.Diagnostics;
-using Tests.Shared.ViewModels;
+using Tests.Shuriken.Wpf.Infrastructure;
 using EventListener = Shuriken.Diagnostics.EventListener;
 
 namespace Tests.Shuriken.Wpf
@@ -26,7 +25,6 @@ namespace Tests.Shuriken.Wpf
 
         [TestMethod]
         [Timeout(1_000)]
-        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
         public async Task _Events()
         {
             var sync = new object();
@@ -34,9 +32,9 @@ namespace Tests.Shuriken.Wpf
             var operationalEvents = 0;
             var analyticEvents = 0;
 
-            EventHandler<EventWrittenEventArgs> operationalEventHandler = (sender, e) =>
+            void OperationalEventHandler(object? sender, EventWrittenEventArgs e)
             {
-                Assert.IsNull(sender);
+                NullAssert.IsNull(sender);
 
                 Assert.IsNotNull(e);
                 Assert.AreEqual(EventChannel.Operational, e.Channel);
@@ -47,11 +45,11 @@ namespace Tests.Shuriken.Wpf
                 }
 
                 AssertDebugMessage(e);
-            };
+            }
 
-            EventHandler<EventWrittenEventArgs> analyticEventHandler = (sender, e) =>
+            void AnalyticEventHandler(object? sender, EventWrittenEventArgs e)
             {
-                Assert.IsNull(sender);
+                NullAssert.IsNull(sender);
 
                 Assert.IsNotNull(e);
                 Assert.AreEqual(EventChannel.Analytic, e.Channel);
@@ -62,28 +60,28 @@ namespace Tests.Shuriken.Wpf
                 }
 
                 AssertDebugMessage(e);
-            };
+            }
 
-            EventHandler<EventWrittenEventArgs> failingEventHandler = (sender, e) => throw new NotSupportedException();
+            static void FailingEventHandler(object? sender, EventWrittenEventArgs e) => throw new NotSupportedException();
 
             // subscribing
-            EventListener.OperationalEvent += operationalEventHandler;
-            EventListener.OperationalEvent += failingEventHandler;
-            EventListener.AnalyticEvent += analyticEventHandler;
-            EventListener.AnalyticEvent += failingEventHandler;
+            EventListener.OperationalEvent += OperationalEventHandler;
+            EventListener.OperationalEvent += FailingEventHandler;
+            EventListener.AnalyticEvent += AnalyticEventHandler;
+            EventListener.AnalyticEvent += FailingEventHandler;
 
             try
             {
                 // producing events
-                await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(async monitorScope => await Task.Delay(500));
+                await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(monitorScope => Task.Delay(500));
             }
             finally
             {
                 // unsubscribing
-                EventListener.OperationalEvent -= operationalEventHandler;
-                EventListener.OperationalEvent -= failingEventHandler;
-                EventListener.AnalyticEvent -= analyticEventHandler;
-                EventListener.AnalyticEvent -= failingEventHandler;
+                EventListener.OperationalEvent -= OperationalEventHandler;
+                EventListener.OperationalEvent -= FailingEventHandler;
+                EventListener.AnalyticEvent -= AnalyticEventHandler;
+                EventListener.AnalyticEvent -= FailingEventHandler;
             }
 
             lock (sync)

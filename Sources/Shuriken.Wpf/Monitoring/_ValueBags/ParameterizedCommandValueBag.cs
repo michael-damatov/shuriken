@@ -7,14 +7,13 @@ namespace Shuriken.Monitoring
 {
     internal sealed class ParameterizedCommandValueBag : ValueBag
     {
-        [NotNull]
         readonly ParameterizedCommandPropertyAccessor propertyAccessor;
 
-        volatile CommandBase currentValue;
+        volatile CommandBase? currentValue;
 
         volatile bool currentIsExecuting;
 
-        volatile CommandBase newValue;
+        volatile CommandBase? newValue;
 
         volatile bool newIsExecuting;
 
@@ -26,9 +25,7 @@ namespace Shuriken.Monitoring
 
         volatile bool isIsExecutingChanged;
 
-        internal ParameterizedCommandValueBag(
-            [NotNull] ObservableObject observableObject,
-            [NotNull] ParameterizedCommandPropertyAccessor propertyAccessor)
+        public ParameterizedCommandValueBag(ObservableObject observableObject, ParameterizedCommandPropertyAccessor propertyAccessor)
         {
             this.propertyAccessor = propertyAccessor;
 
@@ -50,7 +47,7 @@ namespace Shuriken.Monitoring
         }
 
         [MustUseReturnValue]
-        CommandBase GetCurrentValue(ObservableObject observableObject)
+        CommandBase? GetCurrentValue(ObservableObject observableObject)
         {
             try
             {
@@ -72,7 +69,7 @@ namespace Shuriken.Monitoring
         }
 
         [MustUseReturnValue]
-        bool GetCurrentIsExecuting([NotNull] CommandBase value)
+        bool GetCurrentIsExecuting(CommandBase value)
         {
             var isExecuting = value.RunningExecution != null;
 

@@ -1,13 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using JetBrains.Annotations;
 
 namespace Demo.Shuriken.Wpf.ViewModels
 {
     public sealed class SampleViewModelContainerRegular : INotifyPropertyChanged
     {
-        [NotNull]
-        [ItemNotNull]
         readonly SampleViewModelRegular[] viewModels;
 
         int current;
@@ -45,6 +42,6 @@ namespace Demo.Shuriken.Wpf.ViewModels
 
         void OnPropertyChanged(PropertyChangedEventArgs e) => PropertyChanged?.Invoke(this, e);
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

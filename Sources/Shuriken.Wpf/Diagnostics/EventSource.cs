@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
-using JetBrains.Annotations;
 
 namespace Shuriken.Diagnostics
 {
@@ -16,7 +15,6 @@ namespace Shuriken.Diagnostics
             public const EventKeywords Performance = (EventKeywords)0x2;
         }
 
-        [NotNull]
         public static readonly EventSource Log = new EventSource();
 
         EventSource() { }

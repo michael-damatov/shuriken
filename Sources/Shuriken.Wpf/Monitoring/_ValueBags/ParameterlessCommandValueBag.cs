@@ -7,14 +7,13 @@ namespace Shuriken.Monitoring
 {
     internal sealed class ParameterlessCommandValueBag : ValueBag
     {
-        [NotNull]
         readonly ParameterlessCommandPropertyAccessor propertyAccessor;
 
-        volatile ParameterlessCommand currentValue;
+        volatile ParameterlessCommand? currentValue;
 
         volatile bool currentCanExecute;
 
-        volatile ParameterlessCommand newValue;
+        volatile ParameterlessCommand? newValue;
 
         volatile bool newCanExecute;
 
@@ -26,9 +25,7 @@ namespace Shuriken.Monitoring
 
         volatile bool isCanExecuteChanged;
 
-        internal ParameterlessCommandValueBag(
-            [NotNull] ObservableObject observableObject,
-            [NotNull] ParameterlessCommandPropertyAccessor propertyAccessor)
+        public ParameterlessCommandValueBag(ObservableObject observableObject, ParameterlessCommandPropertyAccessor propertyAccessor)
         {
             this.propertyAccessor = propertyAccessor;
 
@@ -61,7 +58,7 @@ namespace Shuriken.Monitoring
         }
 
         [MustUseReturnValue]
-        ParameterlessCommand GetCurrentValue(ObservableObject observableObject)
+        ParameterlessCommand? GetCurrentValue(ObservableObject observableObject)
         {
             try
             {
@@ -83,7 +80,7 @@ namespace Shuriken.Monitoring
         }
 
         [MustUseReturnValue]
-        bool GetCurrentGetExecute([NotNull] ParameterlessCommand value)
+        bool GetCurrentGetExecute(ParameterlessCommand value)
         {
             try
             {

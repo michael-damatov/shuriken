@@ -4,35 +4,31 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shuriken;
-using Tests.Shared;
+using Tests.Shuriken.Wpf.Infrastructure;
 
 namespace Tests.Shuriken.Wpf
 {
     [TestClass]
+    [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
     public sealed class AsyncParameterizedCommandTests
     {
         [TestMethod]
-        [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
-        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public void _Ctor_Exceptions()
         {
-            ExceptionAssert.Throws<ArgumentNullException>(() => new AsyncCommand<int>(null as Func<int, Task>), "execute");
-            ExceptionAssert.Throws<ArgumentNullException>(() => new AsyncCommand<int>(null as Func<int, CancellationToken, Task>), "execute");
+            ExceptionAssert.Throws<ArgumentNullException>(() => new AsyncCommand<int>((null as Func<int, Task>)!), "execute");
+            ExceptionAssert.Throws<ArgumentNullException>(() => new AsyncCommand<int>((null as Func<int, CancellationToken, Task>)!), "execute");
             ExceptionAssert.Throws<ArgumentNullException>(
-                () => new AsyncCommand<int>(null as Func<int, CommandExecutionController, CancellationToken, Task>),
+                () => new AsyncCommand<int>((null as Func<int, CommandExecutionController, CancellationToken, Task>)!),
                 "execute");
         }
 
-        [NotNull]
-        [ItemNotNull]
         static IEnumerable<CommandBaseTests.TestArgs<AsyncCommand<T>>> GetTestArgs<T>(
-            [NotNull] CommandBaseTests.ReentrancyContainer<AsyncCommand<T>> container,
-            [NotNull] Func<T, Task> execute,
-            [NotNull] Func<T, CancellationToken, Task> executeWithCancellationToken,
-            [NotNull] Func<T, CommandExecutionController, CancellationToken, Task> executeWithController)
+            CommandBaseTests.ReentrancyContainer<AsyncCommand<T>> container,
+            Func<T, Task> execute,
+            Func<T, CancellationToken, Task> executeWithCancellationToken,
+            Func<T, CommandExecutionController, CancellationToken, Task> executeWithController)
         {
             var nonDefaultOptions = new CommandOptions(false);
 
@@ -77,11 +73,6 @@ namespace Tests.Shuriken.Wpf
             yield return CommandBaseTests.TestArgs.Create(new AsyncCommand<T>(executeWithController, arg => false), false, true, container);
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "ImplicitlyCapturedClosure")]
-        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
         static IEnumerable<CommandBaseTests.TestArgs<AsyncCommand<T>>> _ExecutionSuccessful<T>()
         {
             var counter = new CommandBaseTests.CommandExecutionCounter();
@@ -94,33 +85,30 @@ namespace Tests.Shuriken.Wpf
 
                 counter.Execution++;
 
-                if (reentrancyContainer.Command.RunningExecution != null)
+                if (reentrancyContainer.Command!.RunningExecution != null)
                 {
                     counter.RunningExecution++;
 
-                    if (reentrancyContainer.Command.RunningExecution.CancelCommand != null)
+                    counter.CancelCommand++;
+
+                    if (reentrancyContainer.Command.RunningExecution!.CancelCommand.CanExecute() == reentrancyContainer.IsCancelCommandEnabled)
                     {
-                        counter.CancelCommand++;
+                        counter.IsCancelCommandEnabled++;
+                    }
 
-                        if (reentrancyContainer.Command.RunningExecution.CancelCommand.CanExecute() == reentrancyContainer.IsCancelCommandEnabled)
-                        {
-                            counter.IsCancelCommandEnabled++;
-                        }
-
-                        if (Math.Abs(reentrancyContainer.Command.RunningExecution.Progress) < float.Epsilon)
-                        {
-                            counter.Progress++;
-                        }
+                    if (Math.Abs(reentrancyContainer.Command.RunningExecution!.Progress) < float.Epsilon)
+                    {
+                        counter.Progress++;
                     }
                 }
 
-                if (!reentrancyContainer.Command.CanExecute(default(T)))
+                if (!reentrancyContainer.Command.CanExecute(default!))
                 {
                     counter.CanExecuteWhileExecuting++;
                 }
 
                 // nested execution
-                await reentrancyContainer.Command.Execute(arg);
+                await reentrancyContainer.Command.Execute(arg).ConfigureAwait(false);
             }
 
             async Task ExecuteWithCancellationToken(T arg, CancellationToken cancellationToken)
@@ -136,19 +124,16 @@ namespace Tests.Shuriken.Wpf
                     counter.CancellationRequest++;
                 }
 
-                await Execute(arg);
+                await Execute(arg).ConfigureAwait(false);
             }
 
             async Task ExecuteWithController(T arg, CommandExecutionController controller, CancellationToken cancellationToken)
             {
                 await Task.Yield();
 
-                if (controller != null)
-                {
-                    counter.Controller++;
-                }
+                counter.Controller++;
 
-                if (controller.Execution == reentrancyContainer.Command.RunningExecution)
+                if (controller.Execution == reentrancyContainer.Command!.RunningExecution)
                 {
                     counter.SameRunningExecution++;
                 }
@@ -203,17 +188,17 @@ namespace Tests.Shuriken.Wpf
             Assert.AreEqual(counter.Controller, counter.DisabledCancelCommand);
         }
 
-        static async Task _ExecutionSuccessful<T>([NotNull] CommandBaseTests.TestArgs<AsyncCommand<T>> args, int nonGenericExecutionCount)
+        static async Task _ExecutionSuccessful<T>(CommandBaseTests.TestArgs<AsyncCommand<T>> args, int nonGenericExecutionCount)
         {
             Assert.AreEqual(args.IsCancelCommandEnabled, args.Command.Options.IsCancelCommandEnabled);
-            Assert.AreEqual(args.CanExecute, args.Command.CanExecute(default(T)));
+            Assert.AreEqual(args.CanExecute, args.Command.CanExecute(default!));
 
             args.UpdateReentrancyContainer(1 + nonGenericExecutionCount + 1);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
-            await args.Command.Execute(default(T));
+            await args.Command.Execute(default!);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
             ((ICommand)args.Command).Execute(0);
@@ -223,7 +208,7 @@ namespace Tests.Shuriken.Wpf
             }
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
-            ((ICommand)args.Command).Execute(null);
+            ((ICommand)args.Command).Execute(null!);
             while (args.Command.RunningExecution != null)
             {
                 await Task.Delay(100);
@@ -237,7 +222,7 @@ namespace Tests.Shuriken.Wpf
             }
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
-            args.Command.StartExecute(default(T));
+            args.Command.StartExecute(default!);
             while (args.Command.RunningExecution != null)
             {
                 await Task.Delay(100);
@@ -249,41 +234,37 @@ namespace Tests.Shuriken.Wpf
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(int))]
         [Timeout(1_000)]
-        public async Task _ExecutionSuccessful_ValueType([NotNull] CommandBaseTests.TestArgs<AsyncCommand<int>> args)
+        public async Task _ExecutionSuccessful_ValueType(CommandBaseTests.TestArgs<AsyncCommand<int>> args)
         {
             await _ExecutionSuccessful(args, 1);
 
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(0));
-            Assert.IsFalse(((ICommand)args.Command).CanExecute(null));
+            Assert.IsFalse(((ICommand)args.Command).CanExecute(null!));
             Assert.IsFalse(((ICommand)args.Command).CanExecute(""));
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(int?))]
         [Timeout(1_000)]
-        public async Task _ExecutionSuccessful_NullableValueType([NotNull] CommandBaseTests.TestArgs<AsyncCommand<int?>> args)
+        public async Task _ExecutionSuccessful_NullableValueType(CommandBaseTests.TestArgs<AsyncCommand<int?>> args)
         {
             await _ExecutionSuccessful(args, 2);
 
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(0));
-            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null));
+            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null!));
             Assert.IsFalse(((ICommand)args.Command).CanExecute(""));
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(string))]
         [Timeout(1_000)]
-        public async Task _ExecutionSuccessful_ReferenceType([NotNull] CommandBaseTests.TestArgs<AsyncCommand<string>> args)
+        public async Task _ExecutionSuccessful_ReferenceType(CommandBaseTests.TestArgs<AsyncCommand<string>> args)
         {
             await _ExecutionSuccessful(args, 2);
 
             Assert.IsFalse(((ICommand)args.Command).CanExecute(0));
-            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null));
+            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null!));
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(""));
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "ImplicitlyCapturedClosure")]
         static IEnumerable<CommandBaseTests.TestArgs<AsyncCommand<T>>> _ExecutionCanceled<T>()
         {
             var counter = new CommandBaseTests.CommandExecutionCounter();
@@ -294,7 +275,7 @@ namespace Tests.Shuriken.Wpf
             {
                 await Task.Yield();
 
-                reentrancyContainer.Command.RunningExecution.CancelCommand.Execute();
+                reentrancyContainer.Command!.RunningExecution!.CancelCommand.Execute();
 
                 throw new OperationCanceledException();
             }
@@ -330,7 +311,7 @@ namespace Tests.Shuriken.Wpf
 
                 controller.ReportProgress(0.4f);
 
-                await ExecuteWithCancellationToken(arg, cancellationToken);
+                await ExecuteWithCancellationToken(arg, cancellationToken).ConfigureAwait(false);
             }
 
             foreach (var args in GetTestArgs(reentrancyContainer, Execute, ExecuteWithCancellationToken, ExecuteWithController))
@@ -343,12 +324,12 @@ namespace Tests.Shuriken.Wpf
 
         [DataDrivenTestMethod(nameof(_ExecutionCanceled), GenericArgument = typeof(int))]
         [Timeout(1_000)]
-        public async Task _ExecutionCanceled([NotNull] CommandBaseTests.TestArgs<AsyncCommand<int>> args)
+        public async Task _ExecutionCanceled(CommandBaseTests.TestArgs<AsyncCommand<int>> args)
         {
             args.UpdateReentrancyContainer(3);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
             await args.Command.Execute(0);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Canceled, false, false);
@@ -370,14 +351,11 @@ namespace Tests.Shuriken.Wpf
             CommandBaseTests.CanExecuteChanged(args.Command);
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         static IEnumerable<CommandBaseTests.TestArgs<AsyncCommand<T>>> _ExecutionFailed<T>()
         {
             var reentrancyContainer = new CommandBaseTests.ReentrancyContainer<AsyncCommand<T>>();
 
-            async Task Execute(T arg)
+            static async Task Execute(T arg)
             {
                 await Task.Yield();
 
@@ -392,7 +370,7 @@ namespace Tests.Shuriken.Wpf
 
                 controller.ReportProgress(0.4f);
 
-                await ExecuteWithCancellationToken(arg, cancellationToken);
+                await ExecuteWithCancellationToken(arg, cancellationToken).ConfigureAwait(false);
             }
 
             return GetTestArgs(reentrancyContainer, Execute, ExecuteWithCancellationToken, ExecuteWithController);
@@ -400,12 +378,12 @@ namespace Tests.Shuriken.Wpf
 
         [DataDrivenTestMethod(nameof(_ExecutionFailed), GenericArgument = typeof(int))]
         [Timeout(1_000)]
-        public async Task _ExecutionFailed([NotNull] CommandBaseTests.TestArgs<AsyncCommand<int>> args)
+        public async Task _ExecutionFailed(CommandBaseTests.TestArgs<AsyncCommand<int>> args)
         {
             args.UpdateReentrancyContainer(3);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
             await args.Command.Execute(0);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Faulted, false, true);
@@ -427,22 +405,19 @@ namespace Tests.Shuriken.Wpf
             CommandBaseTests.CanExecuteChanged(args.Command);
         }
 
-        [NotNull]
-        [ItemNotNull]
         static IEnumerable<AsyncCommand<T>> _ExecutionFailed_NullTask<T>()
         {
-            yield return new AsyncCommand<T>(arg => null);
-            yield return new AsyncCommand<T>((arg, cancellationToken) => null);
-            yield return new AsyncCommand<T>((arg, controller, cancellationToken) => null);
+            yield return new AsyncCommand<T>(arg => null!);
+            yield return new AsyncCommand<T>((arg, cancellationToken) => null!);
+            yield return new AsyncCommand<T>((arg, controller, cancellationToken) => null!);
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionFailed_NullTask), GenericArgument = typeof(int))]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        public async Task _ExecutionFailed_NullTask([NotNull] AsyncCommand<int> command)
+        public async Task _ExecutionFailed_NullTask(AsyncCommand<int> command)
         {
             await command.Execute(0);
 
-            Assert.IsInstanceOfType(command.CompletedExecution.Exception, typeof(InvalidOperationException));
+            Assert.IsInstanceOfType(command.CompletedExecution!.Exception!, typeof(InvalidOperationException));
         }
     }
 }

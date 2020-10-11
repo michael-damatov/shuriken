@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using Microsoft.Win32;
@@ -9,14 +8,12 @@ namespace Shuriken.Monitoring
 {
     partial class ApplicationMonitorScope
     {
-        IDisposable sessionSuspension;
+        IDisposable? sessionSuspension;
 
         /// <exception cref="InvalidOperationException">Maximum suspension depth has been exceeded.</exception>
         [SecuritySafeCritical]
-        void SystemEventsOnSessionSwitch(object sender, SessionSwitchEventArgs e)
+        void SystemEventsOnSessionSwitch(object? sender, SessionSwitchEventArgs e)
         {
-            Debug.Assert(e != null);
-
             switch (e.Reason)
             {
                 case SessionSwitchReason.ConsoleConnect:
@@ -37,10 +34,7 @@ namespace Shuriken.Monitoring
                 case SessionSwitchReason.SessionLock:
                     lock (countEventForSuspensions)
                     {
-                        if (sessionSuspension == null)
-                        {
-                            sessionSuspension = Suspend();
-                        }
+                        sessionSuspension ??= Suspend();
                     }
                     break;
             }
