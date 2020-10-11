@@ -13,15 +13,9 @@ namespace Shuriken.Monitoring
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "LINQ queries are avoided to reduce GC load.")]
     internal sealed class ObservableObjectInfo
     {
-        static void CreateDynamicMethod(
-            [NotNull] PropertyInfo property,
-            [NotNull] Type returnType,
-            [NotNull] out DynamicMethod dynamicMethod,
-            [NotNull] out ILGenerator generator)
+        static void CreateDynamicMethod(PropertyInfo property, Type returnType, out DynamicMethod dynamicMethod, out ILGenerator generator)
         {
             var getMethod = property.GetGetMethod();
-
-            Debug.Assert(getMethod != null);
 
             dynamicMethod = new DynamicMethod("", returnType, new[] { typeof(ObservableObject) }, true);
 
@@ -33,7 +27,7 @@ namespace Shuriken.Monitoring
 
             generator.Emit(OpCodes.Castclass, property.DeclaringType);
 
-            generator.Emit(getMethod.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getMethod);
+            generator.Emit(getMethod!.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getMethod);
         }
 
         /// <remarks>
@@ -46,8 +40,7 @@ namespace Shuriken.Monitoring
         /// </code>
         /// </remarks>
         [Pure]
-        [NotNull]
-        static Func<ObservableObject, object> CreatePropertyGetMethod([NotNull] PropertyInfo property)
+        static Func<ObservableObject, object?> CreatePropertyGetMethod(PropertyInfo property)
         {
             Debug.Assert(property.CanRead);
             Debug.Assert(property.GetIndexParameters().Length == 0);
@@ -74,8 +67,7 @@ namespace Shuriken.Monitoring
         /// </code>
         /// </remarks>
         [Pure]
-        [NotNull]
-        static Func<ObservableObject, ParameterlessCommand> CreateParameterlessCommandPropertyGetMethod([NotNull] PropertyInfo property)
+        static Func<ObservableObject, ParameterlessCommand?> CreateParameterlessCommandPropertyGetMethod(PropertyInfo property)
         {
             Debug.Assert(property.CanRead);
             Debug.Assert(property.GetIndexParameters().Length == 0);
@@ -85,7 +77,7 @@ namespace Shuriken.Monitoring
 
             generator.Emit(OpCodes.Ret);
 
-            return (Func<ObservableObject, ParameterlessCommand>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, ParameterlessCommand>));
+            return (Func<ObservableObject, ParameterlessCommand?>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, ParameterlessCommand?>));
         }
 
         /// <remarks>
@@ -98,8 +90,7 @@ namespace Shuriken.Monitoring
         /// </code>
         /// </remarks>
         [Pure]
-        [NotNull]
-        static Func<ObservableObject, CommandBase> CreateParameterizedCommandPropertyGetMethod([NotNull] PropertyInfo property)
+        static Func<ObservableObject, CommandBase?> CreateParameterizedCommandPropertyGetMethod(PropertyInfo property)
         {
             Debug.Assert(property.CanRead);
             Debug.Assert(property.GetIndexParameters().Length == 0);
@@ -113,13 +104,11 @@ namespace Shuriken.Monitoring
 
             generator.Emit(OpCodes.Ret);
 
-            return (Func<ObservableObject, CommandBase>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, CommandBase>));
+            return (Func<ObservableObject, CommandBase?>)dynamicMethod.CreateDelegate(typeof(Func<ObservableObject, CommandBase?>));
         }
 
         [Pure]
-        [NotNull]
-        [ItemNotNull]
-        static IEnumerable<PropertyInfo> GetPropertiesAnnotatedAsObservable([NotNull] Type type)
+        static IEnumerable<PropertyInfo> GetPropertiesAnnotatedAsObservable(Type type)
         {
             foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
@@ -131,7 +120,7 @@ namespace Shuriken.Monitoring
         }
 
         [Pure]
-        internal static bool HasObservableProperties([NotNull] ObservableObject observableObject)
+        internal static bool HasObservableProperties(ObservableObject observableObject)
         {
             var type = observableObject.GetType();
 
@@ -144,14 +133,11 @@ namespace Shuriken.Monitoring
             return GetPropertiesAnnotatedAsObservable(type).Any(property => property.GetIndexParameters().Length == 0);
         }
 
-        [NotNull]
         readonly WeakReference<ObservableObject> observableObjectReference;
 
-        [NotNull]
-        [ItemNotNull]
         readonly List<ValueBag> valueBags;
 
-        public ObservableObjectInfo([NotNull] ObservableObject observableObject)
+        public ObservableObjectInfo(ObservableObject observableObject)
         {
             var type = observableObject.GetType();
 

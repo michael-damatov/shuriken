@@ -4,8 +4,8 @@ namespace Shuriken
 {
     partial class ParameterlessCommand : ICommand
     {
-        bool ICommand.CanExecute(object parameter) => CanExecute();
+        bool ICommand.CanExecute(object? parameter) => CanExecute();
 
-        void ICommand.Execute(object parameter) => ExecuteCore();
+        void ICommand.Execute(object? parameter) => ExecuteCore();
     }
 }

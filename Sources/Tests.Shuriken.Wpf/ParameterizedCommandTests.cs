@@ -3,35 +3,31 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Windows.Input;
-using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shuriken;
-using Tests.Shared;
+using Tests.Shuriken.Wpf.Infrastructure;
 
 namespace Tests.Shuriken.Wpf
 {
     [TestClass]
+    [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
     public sealed class ParameterizedCommandTests
     {
         [TestMethod]
-        [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
-        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
         public void _Ctor_Exceptions()
         {
-            ExceptionAssert.Throws<ArgumentNullException>(() => new Command<int>(null as Action<int>), "execute");
-            ExceptionAssert.Throws<ArgumentNullException>(() => new Command<int>(null as Action<int, CancellationToken>), "execute");
+            ExceptionAssert.Throws<ArgumentNullException>(() => new Command<int>((null as Action<int>)!), "execute");
+            ExceptionAssert.Throws<ArgumentNullException>(() => new Command<int>((null as Action<int, CancellationToken>)!), "execute");
             ExceptionAssert.Throws<ArgumentNullException>(
-                () => new Command<int>(null as Action<int, CommandExecutionController, CancellationToken>),
+                () => new Command<int>((null as Action<int, CommandExecutionController, CancellationToken>)!),
                 "execute");
         }
 
-        [NotNull]
-        [ItemNotNull]
         static IEnumerable<CommandBaseTests.TestArgs<Command<T>>> GetTestArgs<T>(
-            [NotNull] CommandBaseTests.ReentrancyContainer<Command<T>> container,
-            [NotNull] Action<T> execute,
-            [NotNull] Action<T, CancellationToken> executeWithCancellationToken,
-            [NotNull] Action<T, CommandExecutionController, CancellationToken> executeWithController)
+            CommandBaseTests.ReentrancyContainer<Command<T>> container,
+            Action<T> execute,
+            Action<T, CancellationToken> executeWithCancellationToken,
+            Action<T, CommandExecutionController, CancellationToken> executeWithController)
         {
             var nonDefaultOptions = new CommandOptions(true);
 
@@ -66,11 +62,6 @@ namespace Tests.Shuriken.Wpf
                 CommandBaseTests.TestArgs.Create(new Command<T>(executeWithController, arg => false, nonDefaultOptions), false, true, container);
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "ImplicitlyCapturedClosure")]
-        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
         static IEnumerable<CommandBaseTests.TestArgs<Command<T>>> _ExecutionSuccessful<T>()
         {
             var counter = new CommandBaseTests.CommandExecutionCounter();
@@ -81,27 +72,24 @@ namespace Tests.Shuriken.Wpf
             {
                 counter.Execution++;
 
-                if (reentrancyContainer.Command.RunningExecution != null)
+                if (reentrancyContainer.Command!.RunningExecution != null)
                 {
                     counter.RunningExecution++;
 
-                    if (reentrancyContainer.Command.RunningExecution.CancelCommand != null)
+                    counter.CancelCommand++;
+
+                    if (reentrancyContainer.Command.RunningExecution!.CancelCommand.CanExecute() == reentrancyContainer.IsCancelCommandEnabled)
                     {
-                        counter.CancelCommand++;
+                        counter.IsCancelCommandEnabled++;
+                    }
 
-                        if (reentrancyContainer.Command.RunningExecution.CancelCommand.CanExecute() == reentrancyContainer.IsCancelCommandEnabled)
-                        {
-                            counter.IsCancelCommandEnabled++;
-                        }
-
-                        if (Math.Abs(reentrancyContainer.Command.RunningExecution.Progress) < float.Epsilon)
-                        {
-                            counter.Progress++;
-                        }
+                    if (Math.Abs(reentrancyContainer.Command.RunningExecution!.Progress) < float.Epsilon)
+                    {
+                        counter.Progress++;
                     }
                 }
 
-                if (!reentrancyContainer.Command.CanExecute(default(T)))
+                if (!reentrancyContainer.Command.CanExecute(default!))
                 {
                     counter.CanExecuteWhileExecuting++;
                 }
@@ -126,12 +114,9 @@ namespace Tests.Shuriken.Wpf
 
             void ExecuteWithController(T arg, CommandExecutionController controller, CancellationToken cancellationToken)
             {
-                if (controller != null)
-                {
-                    counter.Controller++;
-                }
+                counter.Controller++;
 
-                if (controller.Execution == reentrancyContainer.Command.RunningExecution)
+                if (controller.Execution == reentrancyContainer.Command!.RunningExecution)
                 {
                     counter.SameRunningExecution++;
                 }
@@ -186,23 +171,23 @@ namespace Tests.Shuriken.Wpf
             Assert.AreEqual(counter.Controller, counter.DisabledCancelCommand);
         }
 
-        static void _ExecutionSuccessful<T>([NotNull] CommandBaseTests.TestArgs<Command<T>> args, int nonGenericExecutionCount)
+        static void _ExecutionSuccessful<T>(CommandBaseTests.TestArgs<Command<T>> args, int nonGenericExecutionCount)
         {
             Assert.AreEqual(args.IsCancelCommandEnabled, args.Command.Options.IsCancelCommandEnabled);
-            Assert.AreEqual(args.CanExecute, args.Command.CanExecute(default(T)));
+            Assert.AreEqual(args.CanExecute, args.Command.CanExecute(default!));
 
             args.UpdateReentrancyContainer(1 + nonGenericExecutionCount);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
-            args.Command.Execute(default(T));
+            args.Command.Execute(default!);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
             ((ICommand)args.Command).Execute(0);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
-            ((ICommand)args.Command).Execute(null);
+            ((ICommand)args.Command).Execute(null!);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Done, true, false);
 
             ((ICommand)args.Command).Execute("");
@@ -212,39 +197,35 @@ namespace Tests.Shuriken.Wpf
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(int))]
-        public void _ExecutionSuccessful_ValueType([NotNull] CommandBaseTests.TestArgs<Command<int>> args)
+        public void _ExecutionSuccessful_ValueType(CommandBaseTests.TestArgs<Command<int>> args)
         {
             _ExecutionSuccessful(args, 1);
 
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(0));
-            Assert.IsFalse(((ICommand)args.Command).CanExecute(null));
+            Assert.IsFalse(((ICommand)args.Command).CanExecute(null!));
             Assert.IsFalse(((ICommand)args.Command).CanExecute(""));
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(int?))]
-        public void _ExecutionSuccessful_NullableValueType([NotNull] CommandBaseTests.TestArgs<Command<int?>> args)
+        public void _ExecutionSuccessful_NullableValueType(CommandBaseTests.TestArgs<Command<int?>> args)
         {
             _ExecutionSuccessful(args, 2);
 
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(0));
-            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null));
+            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null!));
             Assert.IsFalse(((ICommand)args.Command).CanExecute(""));
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionSuccessful), GenericArgument = typeof(string))]
-        public void _ExecutionSuccessful_ReferenceType([NotNull] CommandBaseTests.TestArgs<Command<string>> args)
+        public void _ExecutionSuccessful_ReferenceType(CommandBaseTests.TestArgs<Command<string>> args)
         {
             _ExecutionSuccessful(args, 2);
 
             Assert.IsFalse(((ICommand)args.Command).CanExecute(0));
-            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null));
+            Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(null!));
             Assert.AreEqual(args.CanExecute, ((ICommand)args.Command).CanExecute(""));
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "ImplicitlyCapturedClosure")]
         static IEnumerable<CommandBaseTests.TestArgs<Command<T>>> _ExecutionCanceled<T>()
         {
             var counter = new CommandBaseTests.CommandExecutionCounter();
@@ -253,7 +234,7 @@ namespace Tests.Shuriken.Wpf
 
             void Execute(T arg)
             {
-                reentrancyContainer.Command.RunningExecution.CancelCommand.Execute();
+                reentrancyContainer.Command!.RunningExecution!.CancelCommand.Execute();
 
                 throw new OperationCanceledException();
             }
@@ -299,12 +280,12 @@ namespace Tests.Shuriken.Wpf
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionCanceled), GenericArgument = typeof(int))]
-        public void _ExecutionCanceled([NotNull] CommandBaseTests.TestArgs<Command<int>> args)
+        public void _ExecutionCanceled(CommandBaseTests.TestArgs<Command<int>> args)
         {
             args.UpdateReentrancyContainer(2);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
             args.Command.Execute(0);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Canceled, false, false);
@@ -315,14 +296,11 @@ namespace Tests.Shuriken.Wpf
             CommandBaseTests.CanExecuteChanged(args.Command);
         }
 
-        [NotNull]
-        [ItemNotNull]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         static IEnumerable<CommandBaseTests.TestArgs<Command<T>>> _ExecutionFailed<T>()
         {
             var reentrancyContainer = new CommandBaseTests.ReentrancyContainer<Command<T>>();
 
-            void Execute(T arg) => throw new InvalidOperationException();
+            static void Execute(T arg) => throw new InvalidOperationException();
 
             void ExecuteWithCancellationToken(T arg, CancellationToken cancellationToken) => Execute(arg);
 
@@ -337,12 +315,12 @@ namespace Tests.Shuriken.Wpf
         }
 
         [DataDrivenTestMethod(nameof(_ExecutionFailed), GenericArgument = typeof(int))]
-        public void _ExecutionFailed([NotNull] CommandBaseTests.TestArgs<Command<int>> args)
+        public void _ExecutionFailed(CommandBaseTests.TestArgs<Command<int>> args)
         {
             args.UpdateReentrancyContainer(2);
 
-            Assert.IsNull(args.Command.RunningExecution);
-            Assert.IsNull(args.Command.CompletedExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
+            Assert.IsNull(args.Command.CompletedExecution!);
 
             args.Command.Execute(0);
             CommandBaseTests.AssertExecutionsAfterCompletion(args, CompletedCommandExecutionState.Faulted, false, true);

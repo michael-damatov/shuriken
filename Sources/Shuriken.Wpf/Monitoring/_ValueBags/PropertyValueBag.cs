@@ -7,18 +7,17 @@ namespace Shuriken.Monitoring
 {
     internal sealed class PropertyValueBag : ValueBag
     {
-        [NotNull]
         readonly PropertyPropertyAccessor propertyAccessor;
 
-        volatile object currentValue;
+        volatile object? currentValue;
 
-        volatile object newValue;
+        volatile object? newValue;
 
         volatile bool isValueValid;
 
         volatile bool isValueChanged;
 
-        internal PropertyValueBag([NotNull] ObservableObject observableObject, [NotNull] PropertyPropertyAccessor propertyAccessor)
+        internal PropertyValueBag(ObservableObject observableObject, PropertyPropertyAccessor propertyAccessor)
         {
             this.propertyAccessor = propertyAccessor;
 
@@ -34,7 +33,7 @@ namespace Shuriken.Monitoring
         }
 
         [MustUseReturnValue]
-        object GetCurrentValue(ObservableObject observableObject)
+        object? GetCurrentValue(ObservableObject observableObject)
         {
             try
             {

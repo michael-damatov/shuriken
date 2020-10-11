@@ -1,8 +1,7 @@
 using System;
-using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shuriken;
-using Tests.Shared;
+using Tests.Shuriken.Wpf.Infrastructure;
 
 namespace Tests.Shuriken.Wpf
 {
@@ -39,15 +38,15 @@ namespace Tests.Shuriken.Wpf
 
         internal sealed class ReentrancyContainer<C> where C : CommandBase
         {
-            public C Command { get; private set; }
+            public C? Command { get; private set; }
 
             public bool IsCancelCommandEnabled { get; private set; }
 
             public int ExecutionCount { get; private set; }
 
-            public CommandExecutionController CapturedController { get; set; }
+            public CommandExecutionController? CapturedController { get; set; }
 
-            internal void Update([NotNull] C command, bool isCancelCommandEnabled, int executionCountIncrement)
+            internal void Update(C command, bool isCancelCommandEnabled, int executionCountIncrement)
             {
                 Command = command;
                 IsCancelCommandEnabled = isCancelCommandEnabled;
@@ -58,21 +57,16 @@ namespace Tests.Shuriken.Wpf
 
         internal static class TestArgs
         {
-            [NotNull]
-            public static TestArgs<C> Create<C>(
-                [NotNull] C command,
-                bool canExecute,
-                bool isCancelCommandEnabled,
-                [NotNull] ReentrancyContainer<C> reentrancyContainer) where C : CommandBase
+            public static TestArgs<C> Create<C>(C command, bool canExecute, bool isCancelCommandEnabled, ReentrancyContainer<C> reentrancyContainer)
+                where C : CommandBase
                 => new TestArgs<C>(command, canExecute, isCancelCommandEnabled, reentrancyContainer);
         }
 
         public sealed class TestArgs<C> where C : CommandBase
         {
-            [NotNull]
             readonly ReentrancyContainer<C> reentrancyContainer;
 
-            internal TestArgs([NotNull] C command, bool canExecute, bool isCancelCommandEnabled, [NotNull] ReentrancyContainer<C> reentrancyContainer)
+            internal TestArgs(C command, bool canExecute, bool isCancelCommandEnabled, ReentrancyContainer<C> reentrancyContainer)
             {
                 this.reentrancyContainer = reentrancyContainer;
 
@@ -81,26 +75,25 @@ namespace Tests.Shuriken.Wpf
                 IsCancelCommandEnabled = isCancelCommandEnabled;
             }
 
-            [NotNull]
             internal C Command { get; }
 
             internal bool CanExecute { get; }
 
             internal bool IsCancelCommandEnabled { get; }
 
-            public CommandExecutionController CapturedController => reentrancyContainer.CapturedController;
+            public CommandExecutionController? CapturedController => reentrancyContainer.CapturedController;
 
             internal void UpdateReentrancyContainer(int executionCount)
                 => reentrancyContainer.Update(Command, IsCancelCommandEnabled, CanExecute ? executionCount : 0);
         }
 
-        internal static void CanExecuteChanged<C>([NotNull] C command) where C : CommandBase
+        internal static void CanExecuteChanged<C>(C command) where C : CommandBase
         {
             var eventRaised = false;
 
             command.CanExecuteChanged += (sender, e) =>
             {
-                Assert.AreSame(command, sender);
+                Assert.AreSame(command, sender!);
                 Assert.AreEqual(EventArgs.Empty, e);
                 eventRaised = true;
             };
@@ -111,18 +104,18 @@ namespace Tests.Shuriken.Wpf
         }
 
         internal static void AssertExecutionsAfterCompletion<C>(
-            [NotNull] TestArgs<C> args,
+            TestArgs<C> args,
             CompletedCommandExecutionState state,
             bool isProgressOne,
             bool hasException) where C : CommandBase
         {
-            Assert.IsNull(args.Command.RunningExecution);
+            Assert.IsNull(args.Command.RunningExecution!);
 
             if (args.CanExecute)
             {
-                Assert.IsNotNull(args.Command.CompletedExecution);
+                Assert.IsNotNull(args.Command.CompletedExecution!);
 
-                Assert.AreEqual(state, args.Command.CompletedExecution.State);
+                Assert.AreEqual(state, args.Command.CompletedExecution!.State);
 
                 if (isProgressOne)
                 {
@@ -135,11 +128,11 @@ namespace Tests.Shuriken.Wpf
 
                 if (hasException)
                 {
-                    Assert.IsNotNull(args.Command.CompletedExecution.Exception);
+                    Assert.IsNotNull(args.Command.CompletedExecution.Exception!);
                 }
                 else
                 {
-                    Assert.IsNull(args.Command.CompletedExecution.Exception);
+                    Assert.IsNull(args.Command.CompletedExecution.Exception!);
                 }
 
                 if (args.CapturedController != null)
@@ -150,7 +143,7 @@ namespace Tests.Shuriken.Wpf
             }
             else
             {
-                Assert.IsNull(args.Command.CompletedExecution);
+                Assert.IsNull(args.Command.CompletedExecution!);
             }
         }
     }

@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using JetBrains.Annotations;
 using Shuriken;
 using Shuriken.Monitoring;
 
@@ -14,7 +12,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
     {
         const int total = 200;
 
-        IDisposable monitoringSuspension;
+        IDisposable? monitoringSuspension;
 
         public MainViewModel()
         {
@@ -52,7 +50,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
             }
         }
 
-        static void DoEvents() => Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+        static void DoEvents() => Application.Current!.Dispatcher!.Invoke(DispatcherPriority.Background, new Action(delegate { }));
 
         static async Task DoWorkAsync(CommandExecutionController controller, CancellationToken cancellationToken)
         {
@@ -73,26 +71,32 @@ namespace Demo.Shuriken.Wpf.ViewModels
             }
         }
 
-        [NotNull]
+        public string Title
+        {
+            get
+            {
+#if NETCOREAPP
+                return "Shuriken Demo (.NET Core)";
+#else
+                return "Shuriken Demo (.NET Framework)";
+#endif
+            }
+        }
+
         public SampleViewModelContainerRegular ContainerRegular { get; } = new SampleViewModelContainerRegular(total);
 
-        [NotNull]
         public SampleViewModelContainer Container { get; } = new SampleViewModelContainer(total);
 
         [Observable]
-        [NotNull]
         public Command Command { get; }
 
         [Observable]
-        [NotNull]
         public AsyncCommand AsyncCommand { get; }
 
         [Observable]
-        [NotNull]
         public Command<string> CommandParameterized { get; }
 
         [Observable]
-        [NotNull]
         public AsyncCommand<string> AsyncCommandParameterized { get; }
 
         public bool IsMonitoringSuspended
@@ -104,9 +108,7 @@ namespace Demo.Shuriken.Wpf.ViewModels
                 {
                     if (monitoringSuspension == null)
                     {
-                        Debug.Assert(ApplicationMonitorScope.Current != null);
-
-                        monitoringSuspension = ApplicationMonitorScope.Current.Suspend();
+                        monitoringSuspension = ApplicationMonitorScope.Current!.Suspend();
 
                         NotifyPropertyChange();
                     }

@@ -1,29 +1,27 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Microsoft.QualityTools.Testing.Fakes;
-using Microsoft.QualityTools.Testing.Fakes.Shims;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
-using Microsoft.Win32.Fakes;
 using Shuriken;
 using Shuriken.Monitoring;
-using Tests.Shared;
-using Tests.Shared.ViewModels;
+using Tests.Shuriken.Wpf.Infrastructure;
 
 namespace Tests.Shuriken.Wpf
 {
     [TestClass]
+    [ExcludeFromCodeCoverage]
+    [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
+    [SuppressMessage("ReSharper", "MustUseReturnValue")]
+    [SuppressMessage("ReSharper", "UnthrowableException")]
     public sealed partial class ApplicationMonitorScopeTests
     {
         sealed class FailingNotificationContext<E> : TestNotificationContext where E : Exception, new()
         {
             readonly InvalidNotificationContextMode mode;
 
-            internal FailingNotificationContext([NotNull] TaskScheduler taskScheduler, InvalidNotificationContextMode mode) : base(taskScheduler)
+            internal FailingNotificationContext(TaskScheduler taskScheduler, InvalidNotificationContextMode mode) : base(taskScheduler)
                 => this.mode = mode;
 
             public override void Invoke(Action action)
@@ -39,24 +37,14 @@ namespace Tests.Shuriken.Wpf
                 }
             }
 
-            [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
             public override Task InvokeAsync(Action action)
-            {
-                switch (mode)
+                => mode switch
                 {
-                    case InvalidNotificationContextMode.FailInvokeAsync:
-                        throw new E();
-
-                    case InvalidNotificationContextMode.InvokeAsyncFails:
-                        return Task.Run(() => throw new E());
-
-                    case InvalidNotificationContextMode.InvokeAsyncReturnsNull:
-                        return null;
-
-                    default:
-                        return base.InvokeAsync(action);
-                }
-            }
+                    InvalidNotificationContextMode.FailInvokeAsync => throw new E(),
+                    InvalidNotificationContextMode.InvokeAsyncFails => Task.Run(() => throw new E()),
+                    InvalidNotificationContextMode.InvokeAsyncReturnsNull => null!,
+                    _ => base.InvokeAsync(action),
+                };
         }
 
         enum InvalidNotificationContextMode
@@ -67,62 +55,55 @@ namespace Tests.Shuriken.Wpf
             InvokeAsyncReturnsNull,
         }
 
-        [SuppressMessage("ReSharper", "ConvertToLocalFunction")]
-        static async Task ExecuteInApplicationMonitorScopeWithFailingNotificationContext<T, E>(
+        static Task ExecuteInApplicationMonitorScopeWithFailingNotificationContext<T, E>(
             InvalidNotificationContextMode mode,
-            [NotNull] T observableObject,
-            [NotNull] Action<T> changeProperty,
-            [NotNull] string propertyName,
+            T observableObject,
+            Action<T> changeProperty,
+            string propertyName,
             bool canRaisePropertyChangeNotifications = true) where T : ObservableObject where E : Exception, new()
-            =>
-                await
-                    ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
-                        () => new FailingNotificationContext<E>(TaskScheduler.FromCurrentSynchronizationContext(), mode),
-                        async monitorScope =>
+            => ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
+                () => new FailingNotificationContext<E>(TaskScheduler.FromCurrentSynchronizationContext(), mode),
+                async monitorScope =>
+                {
+                    var eventRaisingCount = 0;
+                    var expectedEventRaisingCount = 0;
+
+                    void PropertyChangedEventHandler(object? sender, PropertyChangedEventArgs e)
+                    {
+                        Assert.AreSame(observableObject, sender!);
+                        Assert.IsNotNull(e);
+                        Assert.AreEqual(propertyName, e.PropertyName);
+
+                        eventRaisingCount++;
+                    }
+
+                    observableObject.PropertyChanged += PropertyChangedEventHandler;
+
+                    try
+                    {
+                        await Task.Delay(50);
+                        changeProperty(observableObject);
+
+                        if (canRaisePropertyChangeNotifications)
                         {
-                            var eventRaisingCount = 0;
-                            var expectedEventRaisingCount = 0;
+                            expectedEventRaisingCount++;
+                        }
 
-                            PropertyChangedEventHandler propertyChangedEventHandler = (sender, e) =>
-                            {
-                                Assert.AreSame(observableObject, sender);
-                                Assert.IsNotNull(e);
-                                Assert.AreEqual(propertyName, e.PropertyName);
-
-                                eventRaisingCount++;
-                            };
-
-                            observableObject.PropertyChanged += propertyChangedEventHandler;
-
-                            try
-                            {
-                                await Task.Delay(50);
-                                changeProperty(observableObject);
-
-                                if (canRaisePropertyChangeNotifications)
-                                {
-                                    expectedEventRaisingCount++;
-                                }
-
-                                await Task.Delay(1000);
-                                Assert.AreEqual(expectedEventRaisingCount, eventRaisingCount);
-                            }
-                            finally
-                            {
-                                observableObject.PropertyChanged -= propertyChangedEventHandler;
-                            }
-                        }).ConfigureAwait(false);
+                        await Task.Delay(1000);
+                        Assert.AreEqual(expectedEventRaisingCount, eventRaisingCount);
+                    }
+                    finally
+                    {
+                        observableObject.PropertyChanged -= PropertyChangedEventHandler;
+                    }
+                });
 
         [TestMethod]
-        [SuppressMessage("ReSharper", "AssignNullToNotNullAttribute")]
-        [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         public async Task _Ctor()
         {
-            ExceptionAssert.Throws<ArgumentNullException>(() => new ApplicationMonitorScope(null), "notificationContext");
+            ExceptionAssert.Throws<ArgumentNullException>(() => new ApplicationMonitorScope(null!), "notificationContext");
 
-            Assert.IsNull(ApplicationMonitorScope.Current);
+            NullAssert.IsNull(ApplicationMonitorScope.Current);
 
             await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
                 async monitorScope =>
@@ -134,55 +115,54 @@ namespace Tests.Shuriken.Wpf
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
 
-                    Assert.AreSame(monitorScope, ApplicationMonitorScope.Current);
+                    Assert.AreSame(monitorScope, ApplicationMonitorScope.Current!);
 
                     // double-disposing
-                    await monitorScope.Dispose();
+                    await monitorScope.DisposeAsync().ConfigureAwait(false);
                 });
 
-            Assert.IsNull(ApplicationMonitorScope.Current);
+            NullAssert.IsNull(ApplicationMonitorScope.Current);
         }
 
+#if !NETCOREAPP
         [TestMethod]
-        [SuppressMessage("ReSharper", "UnthrowableException")]
-        [SuppressMessage("ReSharper", "DelegateSubtraction")]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         public async Task _Sessions()
         {
-            using (ShimsContext.Create())
+            using (Microsoft.QualityTools.Testing.Fakes.ShimsContext.Create())
             {
-                ShimSystemEvents.Behavior = ShimBehaviors.Fallthrough;
+                Microsoft.Win32.Fakes.ShimSystemEvents.Behavior = Microsoft.QualityTools.Testing.Fakes.Shims.ShimBehaviors.Fallthrough;
 
                 // failure attaching system event (InvalidOperationException)
-                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => throw new InvalidOperationException();
+                Microsoft.Win32.Fakes.ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => throw new InvalidOperationException();
 
                 await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(async monitorScope => await Task.Yield());
 
                 // failure attaching system event (ExternalException)
-                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => throw new ExternalException();
+                Microsoft.Win32.Fakes.ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler =
+                    handler => throw new System.Runtime.InteropServices.ExternalException();
 
                 await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(async monitorScope => await Task.Yield());
 
                 // raising system event
-                SessionSwitchEventHandler eventHandler = null;
-                ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => eventHandler += handler;
-                ShimSystemEvents.SessionSwitchRemoveSessionSwitchEventHandler = handler => eventHandler -= handler;
+                Microsoft.Win32.SessionSwitchEventHandler? eventHandler = null;
+                Microsoft.Win32.Fakes.ShimSystemEvents.SessionSwitchAddSessionSwitchEventHandler = handler => eventHandler += handler;
+                Microsoft.Win32.Fakes.ShimSystemEvents.SessionSwitchRemoveSessionSwitchEventHandler = handler => eventHandler -= handler;
 
                 await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
                     async monitorScope =>
                     {
                         await Task.Delay(50);
 
-                        foreach (SessionSwitchReason reason in Enum.GetValues(typeof(SessionSwitchReason)))
+                        foreach (var reason in Enum.GetValues(typeof(Microsoft.Win32.SessionSwitchReason)))
                         {
-                            eventHandler(null, new SessionSwitchEventArgs(reason));
+                            eventHandler!(null!, new Microsoft.Win32.SessionSwitchEventArgs((Microsoft.Win32.SessionSwitchReason)reason!));
                         }
                     });
             }
         }
+#endif
 
         [TestMethod]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
         public async Task Suspend()
         {
             await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
@@ -194,31 +174,35 @@ namespace Tests.Shuriken.Wpf
                 });
 
             await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
-                async monitorScope =>
-                {
-                    await Task.Delay(1000);
-
-                    using (monitorScope.Suspend())
+                    async monitorScope =>
                     {
-                        await Task.Delay(50);
+                        await Task.Delay(1000);
 
-                        await monitorScope.Dispose();
-                    }
-                });
+                        using (monitorScope.Suspend())
+                        {
+                            await Task.Delay(50);
+
+                            await monitorScope.DisposeAsync();
+                        }
+                    })
+                .ConfigureAwait(false);
         }
 
         [TestMethod]
-        [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        [SuppressMessage("ReSharper", "MustUseReturnValue")]
-        public async Task Suspend_WithOverflow() => await ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
-            async monitorScope =>
-            {
-                await Task.Yield();
+        public Task Suspend_WithOverflow()
+            => ApplicationMonitorScopeController.ExecuteInApplicationMonitorScope(
+                async monitorScope =>
+                {
+                    await Task.Yield();
 
-                var countEventForSuspensions = new PrivateObject(monitorScope).GetField("countEventForSuspensions");
-                new PrivateObject(countEventForSuspensions).SetField("count", int.MaxValue);
+                    var countEventForSuspensions = typeof(ApplicationMonitorScope).GetField(
+                        "countEventForSuspensions",
+                        BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(monitorScope)!;
+                    countEventForSuspensions.GetType().GetField("count", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(
+                        countEventForSuspensions,
+                        int.MaxValue);
 
-                ExceptionAssert.Throws<InvalidOperationException>(() => monitorScope.Suspend());
-            });
+                    ExceptionAssert.Throws<InvalidOperationException>(() => monitorScope.Suspend());
+                });
     }
 }

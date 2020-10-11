@@ -13,12 +13,8 @@ namespace Shuriken
     partial class ObservableObject : INotifyPropertyChanged
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        [NotNull]
-        [ItemNotNull]
         readonly HashSet<PropertyChangedEventHandler> subscribers = new HashSet<PropertyChangedEventHandler>();
 
-        [NotNull]
-        [ItemNotNull]
         [SuppressMessage("ReSharper", "ReturnTypeCanBeEnumerable.Local",
             Justification = "The collection type should be used to improve performance and reduce memory load for iterations.")]
         List<PropertyChangedEventHandler> Subscribers
@@ -36,15 +32,17 @@ namespace Shuriken
         /// Notifies the property change.
         /// </summary>
         /// <param name="propertyName">Name of the property.</param>
-        protected internal void NotifyPropertyChange([CallerMemberName] string propertyName = null)
+        [NotifyPropertyChangedInvocator]
+        protected internal void NotifyPropertyChange([CallerMemberName] string? propertyName = null)
             => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
 
         /// <summary>
         /// Notifies the indexer change.
         /// </summary>
+        [NotifyPropertyChangedInvocator]
         protected void NotifyIndexerChange() => OnPropertyChanged(new PropertyChangedEventArgs(Binding.IndexerName));
 
-        void OnPropertyChanged([NotNull] PropertyChangedEventArgs args)
+        void OnPropertyChanged(PropertyChangedEventArgs args)
         {
             foreach (var subscriber in Subscribers)
             {
@@ -53,7 +51,7 @@ namespace Shuriken
         }
 
         /// <inheritdoc />
-        public event PropertyChangedEventHandler PropertyChanged
+        public event PropertyChangedEventHandler? PropertyChanged
         {
             add
             {

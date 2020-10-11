@@ -10,15 +10,14 @@ namespace Shuriken
     /// </summary>
     public sealed class RunningCommandExecution : ObservableObject
     {
-        [NotNull]
         readonly CancellationTokenSource cancellationSource = new CancellationTokenSource();
 
-        [NotNull]
         readonly ReaderWriterLockSlim gate = new ReaderWriterLockSlim();
 
         /// <remarks>
         /// 0 -> false, 1 -> true
         /// </remarks>
+        [ValueRange(0, 1)]
         int isCancelCommandEnabled;
 
         bool isCompleted;
@@ -42,8 +41,7 @@ namespace Shuriken
 
         internal CancellationToken CancellationToken => cancellationSource.Token;
 
-        [NotNull]
-        internal CompletedCommandExecution Complete(CompletedCommandExecutionState state, Exception exception = null)
+        internal CompletedCommandExecution Complete(CompletedCommandExecutionState state, Exception? exception = null)
         {
             float progress;
 
@@ -129,7 +127,6 @@ namespace Shuriken
         /// </list>
         /// </remarks>
         [Observable]
-        [NotNull]
         public Command CancelCommand { get; }
     }
 }

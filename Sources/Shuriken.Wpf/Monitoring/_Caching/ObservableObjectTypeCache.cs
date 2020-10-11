@@ -7,17 +7,11 @@ namespace Shuriken.Monitoring
 {
     internal static class ObservableObjectTypeCache
     {
-        [NotNull]
         static readonly ReaderWriterLockSlim gate = new ReaderWriterLockSlim();
 
-        [NotNull]
         static readonly Dictionary<Type, List<PropertyAccessor>> cache = new Dictionary<Type, List<PropertyAccessor>>();
 
-        [NotNull]
-        [ItemNotNull]
-        public static List<PropertyAccessor> Register(
-            [NotNull] Type type,
-            [InstantHandle] [NotNull] Func<List<PropertyAccessor>> propertyAccessorsFactory)
+        public static List<PropertyAccessor> Register(Type type, [InstantHandle] Func<List<PropertyAccessor>> propertyAccessorsFactory)
         {
             gate.EnterReadLock();
             try
@@ -51,8 +45,7 @@ namespace Shuriken.Monitoring
         }
 
         [Pure]
-        [ItemNotNull]
-        public static List<PropertyAccessor> TryGet([NotNull] Type type)
+        public static List<PropertyAccessor>? TryGet(Type type)
         {
             gate.EnterReadLock();
             try

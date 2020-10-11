@@ -5,21 +5,14 @@ namespace Shuriken
     partial class ParameterizedCommand<T> : ICommand
     {
         bool ICommand.CanExecute(object parameter)
-        {
-            switch (parameter)
+            => parameter switch
             {
-                case T value:
-                    return CanExecute(value);
+                T value => CanExecute(value),
+                null when default(T) is null => CanExecute(default!),
+                _ => false,
+            };
 
-                case null when ReferenceEquals(default(T), null):
-                    return CanExecute(default(T));
-
-                default:
-                    return false;
-            }
-        }
-
-        void ICommand.Execute(object parameter)
+        void ICommand.Execute(object? parameter)
         {
             switch (parameter)
             {
@@ -27,8 +20,8 @@ namespace Shuriken
                     ExecuteCore(value);
                     break;
 
-                case null when ReferenceEquals(default(T), null):
-                    ExecuteCore(default(T));
+                case null when default(T) is null:
+                    ExecuteCore(default!);
                     break;
             }
         }

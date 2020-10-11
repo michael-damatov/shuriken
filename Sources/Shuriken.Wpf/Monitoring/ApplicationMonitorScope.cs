@@ -39,13 +39,10 @@ namespace Shuriken.Monitoring
         /// </list>
         /// The field also serves as a sync root for the <see cref="sessionSuspension"/> field.
         /// </remarks>
-        [NotNull]
         readonly CountEvent countEventForSuspensions = new CountEvent();
 
-        [NotNull]
         readonly CancellationTokenSource cancellation = new CancellationTokenSource();
 
-        [NotNull]
         readonly Task task;
 
         /// <summary>
@@ -61,7 +58,7 @@ namespace Shuriken.Monitoring
         ///     <item>sending notifications for changed properties.</item>
         /// </list>
         /// </remarks>
-        public ApplicationMonitorScope([NotNull] INotificationContext notificationContext)
+        public ApplicationMonitorScope(INotificationContext notificationContext)
         {
             if (notificationContext == null)
             {
@@ -105,7 +102,6 @@ namespace Shuriken.Monitoring
         /// <summary>
         /// Gets the notification context.
         /// </summary>
-        [NotNull]
         public INotificationContext NotificationContext { get; }
 
         /// <summary>
@@ -119,7 +115,6 @@ namespace Shuriken.Monitoring
         /// Do not invoke the method from the property annotated with the <see cref="ObservableAttribute"/>.
         /// </remarks>
         [MustUseReturnValue]
-        [NotNull]
         public IDisposable Suspend() => new Suspension(countEventForSuspensions);
     }
 }

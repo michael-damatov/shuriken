@@ -1,13 +1,10 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using Shuriken;
 
 namespace Demo.Shuriken.Wpf.ViewModels
 {
     public sealed class SampleViewModelContainer : ObservableObject
     {
-        [NotNull]
-        [ItemNotNull]
         readonly SampleViewModel[] viewModels;
 
         int current;
