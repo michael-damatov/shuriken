@@ -1,16 +1,12 @@
-﻿using JetBrains.Annotations;
-
-namespace Shuriken
+﻿namespace Shuriken
 {
     /// <summary>
     /// Represents command options.
     /// </summary>
     public sealed class CommandOptions
     {
-        [NotNull]
         internal static CommandOptions Default { get; } = new CommandOptions(false);
 
-        [NotNull]
         internal static CommandOptions DefaultAsync { get; } = new CommandOptions(true);
 
         /// <summary>

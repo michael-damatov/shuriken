@@ -15,7 +15,7 @@ namespace Shuriken.Monitoring
         /// </summary>
         /// <param name="action">The action.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        void Invoke([InstantHandle] [NotNull] Action action);
+        void Invoke([InstantHandle] Action action);
 
         /// <summary>
         /// Executes the specified action asynchronously.
@@ -26,7 +26,6 @@ namespace Shuriken.Monitoring
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         [Pure]
-        [NotNull]
-        Task InvokeAsync([NotNull] Action action);
+        Task InvokeAsync(Action action);
     }
 }

@@ -1,4 +1,4 @@
-# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken) [![ReSharper Extension](https://img.shields.io/resharper/v/Shuriken.Annotations.svg?label=ReSharper%20Extension)](https://plugins.jetbrains.com/plugin/11800-shuriken-annotations)
+# Shuriken [![NuGet](https://img.shields.io/nuget/v/Shuriken.svg)](https://www.nuget.org/packages/Shuriken)
 
 Fully automated MVVM library without code rewriting. There is no magic behind it: a background thread monitors object properties (explicitly annotated as `[Observable]`), checks their values by comparing with their previous values, and raises change notifications "in the name" of the object.
 
@@ -76,7 +76,8 @@ static void Main()
     }
     finally
     {
-        applicationMonitorScope.Dispose().GetAwaiter().GetResult();
+        applicationMonitorScope.DisposeAsync().AsTask().GetAwaiter().GetResult(); // when running with .NET Core
+        applicationMonitorScope.DisposeAsync().GetAwaiter().GetResult();          // when running with .NET Framework
     }
 }
 ```
@@ -108,8 +109,6 @@ See [In-depth look into logging and performance monitoring](Docs/Etw.md)
 
 ## Installation
 Use the NuGet package manager to install the package.
-
-:bulb: *ReSharper users*: use the Extension Manager to install the external annotations for the library.
 
 ## Limitations
 The library currently supports the WPF only.

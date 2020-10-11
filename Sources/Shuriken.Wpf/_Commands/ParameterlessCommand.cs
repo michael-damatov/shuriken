@@ -8,14 +8,14 @@ namespace Shuriken
     /// </summary>
     public abstract partial class ParameterlessCommand : CommandBase
     {
-        readonly Func<bool> canExecute;
+        readonly Func<bool>? canExecute;
 
-        internal ParameterlessCommand(bool isThreadSafe, Func<bool> canExecute, [NotNull] CommandOptions options) : base(isThreadSafe, options)
+        private protected ParameterlessCommand(bool isThreadSafe, Func<bool>? canExecute, CommandOptions options) : base(isThreadSafe, options)
             => this.canExecute = canExecute;
 
-        internal bool CanExecuteCore() => canExecute == null || canExecute();
+        private protected bool CanExecuteCore() => canExecute == null || canExecute();
 
-        internal abstract void ExecuteCore();
+        private protected abstract void ExecuteCore();
 
         /// <summary>
         /// Determines whether this command can execute.

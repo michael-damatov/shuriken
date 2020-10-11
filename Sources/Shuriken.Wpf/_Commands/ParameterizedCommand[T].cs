@@ -9,14 +9,14 @@ namespace Shuriken
     /// <typeparam name="T">The command parameter type.</typeparam>
     public abstract partial class ParameterizedCommand<T> : CommandBase
     {
-        readonly Func<T, bool> canExecute;
+        readonly Func<T, bool>? canExecute;
 
-        internal ParameterizedCommand(bool isThreadSafe, Func<T, bool> canExecute, [NotNull] CommandOptions options) : base(isThreadSafe, options)
+        private protected ParameterizedCommand(bool isThreadSafe, Func<T, bool>? canExecute, CommandOptions options) : base(isThreadSafe, options)
             => this.canExecute = canExecute;
 
-        internal bool CanExecuteCore(T arg) => canExecute == null || canExecute(arg);
+        private protected bool CanExecuteCore(T arg) => canExecute == null || canExecute(arg);
 
-        internal abstract void ExecuteCore(T arg);
+        private protected abstract void ExecuteCore(T arg);
 
         /// <summary>
         /// Determines whether this command can execute.

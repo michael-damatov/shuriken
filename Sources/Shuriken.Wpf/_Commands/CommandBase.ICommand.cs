@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Shuriken
 {
     partial class CommandBase
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        [NotNull]
-        [ItemNotNull]
         readonly HashSet<EventHandler> subscribers = new HashSet<EventHandler>();
 
-        [NotNull]
-        [ItemNotNull]
         [SuppressMessage("ReSharper", "ReturnTypeCanBeEnumerable.Local",
             Justification = "The collection type should be used to improve performance and reduce memory load for iterations.")]
         List<EventHandler> Subscribers
@@ -34,7 +29,7 @@ namespace Shuriken
         /// </summary>
         public void NotifyCanExecuteChanged() => OnCanExecuteChanged(EventArgs.Empty);
 
-        void OnCanExecuteChanged([NotNull] EventArgs args)
+        void OnCanExecuteChanged(EventArgs args)
         {
             foreach (var subscriber in Subscribers)
             {
@@ -45,7 +40,7 @@ namespace Shuriken
         /// <summary>
         /// Occurs when changes occur that affect whether or not the command should execute.
         /// </summary>
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add
             {

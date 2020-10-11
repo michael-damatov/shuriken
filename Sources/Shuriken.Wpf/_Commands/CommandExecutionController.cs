@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Shuriken
 {
@@ -9,12 +8,11 @@ namespace Shuriken
     /// </summary>
     public sealed partial class CommandExecutionController
     {
-        internal CommandExecutionController([NotNull] RunningCommandExecution execution) => Execution = execution;
+        internal CommandExecutionController(RunningCommandExecution execution) => Execution = execution;
 
         /// <summary>
         /// Gets the execution.
         /// </summary>
-        [NotNull]
         public RunningCommandExecution Execution { get; }
 
         /// <summary>

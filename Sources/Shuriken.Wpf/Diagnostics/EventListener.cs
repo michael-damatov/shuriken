@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Tracing;
 using System.Linq;
 using JetBrains.Annotations;
@@ -14,10 +13,9 @@ namespace Shuriken.Diagnostics
     {
         sealed class Listener : System.Diagnostics.Tracing.EventListener
         {
-            [NotNull]
             readonly Dictionary<EventChannel, List<EventHandler<EventWrittenEventArgs>>> channelSubscribers;
 
-            public Listener([NotNull] Dictionary<EventChannel, List<EventHandler<EventWrittenEventArgs>>> channelSubscribers)
+            public Listener(Dictionary<EventChannel, List<EventHandler<EventWrittenEventArgs>>> channelSubscribers)
             {
                 this.channelSubscribers = channelSubscribers;
 
@@ -58,13 +56,12 @@ namespace Shuriken.Diagnostics
             }
         }
 
-        [NotNull]
         static readonly Dictionary<EventChannel, List<EventHandler<EventWrittenEventArgs>>> channelSubscribers =
             new Dictionary<EventChannel, List<EventHandler<EventWrittenEventArgs>>>();
 
-        static Listener listener;
+        static Listener? listener;
 
-        static void AddEventHandler(EventChannel channel, EventHandler<EventWrittenEventArgs> value)
+        static void AddEventHandler(EventChannel channel, EventHandler<EventWrittenEventArgs>? value)
         {
             if (value != null)
             {
@@ -86,7 +83,7 @@ namespace Shuriken.Diagnostics
             }
         }
 
-        static void RemoveEventHandler(EventChannel channel, EventHandler<EventWrittenEventArgs> value)
+        static void RemoveEventHandler(EventChannel channel, EventHandler<EventWrittenEventArgs>? value)
         {
             if (value != null)
             {
@@ -101,11 +98,9 @@ namespace Shuriken.Diagnostics
                                 channelSubscribers.Remove(channel);
                             }
 
-                            Debug.Assert(listener != null);
-
                             if (channelSubscribers.Values.Sum(s => s.Count) == 0)
                             {
-                                listener.Dispose();
+                                listener?.Dispose();
                                 listener = null;
                             }
                         }
@@ -117,7 +112,7 @@ namespace Shuriken.Diagnostics
         /// <summary>
         /// Occurs when operational events are raised.
         /// </summary>
-        public static event EventHandler<EventWrittenEventArgs> OperationalEvent
+        public static event EventHandler<EventWrittenEventArgs>? OperationalEvent
         {
             add => AddEventHandler(EventChannel.Operational, value);
             remove => RemoveEventHandler(EventChannel.Operational, value);
@@ -126,7 +121,7 @@ namespace Shuriken.Diagnostics
         /// <summary>
         /// Occurs when analytic events are raised.
         /// </summary>
-        public static event EventHandler<EventWrittenEventArgs> AnalyticEvent
+        public static event EventHandler<EventWrittenEventArgs>? AnalyticEvent
         {
             add => AddEventHandler(EventChannel.Analytic, value);
             remove => RemoveEventHandler(EventChannel.Analytic, value);
@@ -138,15 +133,14 @@ namespace Shuriken.Diagnostics
         /// <param name="eventArgs">The <see cref="EventWrittenEventArgs" /> object containing the event data.</param>
         /// <returns>The event message.</returns>
         [Pure]
-        [NotNull]
-        public static string ToDebugMessage(this EventWrittenEventArgs eventArgs)
+        public static string ToDebugMessage(this EventWrittenEventArgs? eventArgs)
         {
             if (eventArgs == null)
             {
                 return "";
             }
 
-            string message;
+            string? message;
             if (eventArgs.Payload != null)
             {
                 try

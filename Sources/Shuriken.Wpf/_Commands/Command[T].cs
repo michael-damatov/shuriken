@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
-using JetBrains.Annotations;
 using Shuriken.Diagnostics;
 
 namespace Shuriken
@@ -18,11 +16,10 @@ namespace Shuriken
     /// </remarks>
     public sealed class Command<T> : ParameterizedCommand<T>
     {
-        [NotNull]
         readonly Action<T, CommandExecutionController, CancellationToken> execute;
 
-        RunningCommandExecution runningExecution;
-        CompletedCommandExecution completedExecution;
+        RunningCommandExecution? runningExecution;
+        CompletedCommandExecution? completedExecution;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Command{T}" /> class.
@@ -31,7 +28,7 @@ namespace Shuriken
         /// <param name="canExecute">The function to test whether the <paramref name="execute" /> method may be invoked.</param>
         /// <param name="options">The options.</param>
         /// <exception cref="ArgumentNullException"><paramref name="execute" /> is <c>null</c>.</exception>
-        public Command([NotNull] Action<T> execute, Func<T, bool> canExecute = null, CommandOptions options = null)
+        public Command(Action<T> execute, Func<T, bool>? canExecute = null, CommandOptions? options = null)
             : base(false, canExecute, options ?? CommandOptions.Default)
         {
             if (execute == null)
@@ -49,7 +46,7 @@ namespace Shuriken
         /// <param name="canExecute">The function to test whether the <paramref name="execute" /> method may be invoked.</param>
         /// <param name="options">The options.</param>
         /// <exception cref="ArgumentNullException"><paramref name="execute" /> is <c>null</c>.</exception>
-        public Command([NotNull] Action<T, CancellationToken> execute, Func<T, bool> canExecute = null, CommandOptions options = null)
+        public Command(Action<T, CancellationToken> execute, Func<T, bool>? canExecute = null, CommandOptions? options = null)
             : base(false, canExecute, options ?? CommandOptions.Default)
         {
             if (execute == null)
@@ -68,18 +65,18 @@ namespace Shuriken
         /// <param name="options">The options.</param>
         /// <exception cref="ArgumentNullException"><paramref name="execute" /> is <c>null</c>.</exception>
         public Command(
-            [NotNull] Action<T, CommandExecutionController, CancellationToken> execute,
-            Func<T, bool> canExecute = null,
-            CommandOptions options = null) : base(false, canExecute, options ?? CommandOptions.Default)
+            Action<T, CommandExecutionController, CancellationToken> execute,
+            Func<T, bool>? canExecute = null,
+            CommandOptions? options = null) : base(false, canExecute, options ?? CommandOptions.Default)
             => this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
 
-        internal override void ExecuteCore(T arg) => Execute(arg);
+        private protected override void ExecuteCore(T arg) => Execute(arg);
 
         /// <inheritdoc />
-        public override RunningCommandExecution RunningExecution => runningExecution;
+        public override RunningCommandExecution? RunningExecution => runningExecution;
 
         /// <inheritdoc />
-        public override CompletedCommandExecution CompletedExecution => completedExecution;
+        public override CompletedCommandExecution? CompletedExecution => completedExecution;
 
         /// <summary>
         /// Executes this command.
@@ -98,18 +95,15 @@ namespace Shuriken
             {
                 if (CanExecuteCore(arg))
                 {
-                    Debug.Assert(runningExecution != null);
                     var controller = new CommandExecutionController(runningExecution);
 
                     execute(arg, controller, runningExecution.CancellationToken);
 
-                    Debug.Assert(runningExecution != null);
                     completedExecution = runningExecution.Complete(CompletedCommandExecutionState.Done);
                 }
             }
             catch (OperationCanceledException)
             {
-                Debug.Assert(runningExecution != null);
                 completedExecution = runningExecution.Complete(CompletedCommandExecutionState.Canceled);
             }
             catch (Exception e)
@@ -119,7 +113,6 @@ namespace Shuriken
                     EventSource.Log.CommandFailed(e.ToString());
                 }
 
-                Debug.Assert(runningExecution != null);
                 completedExecution = runningExecution.Complete(CompletedCommandExecutionState.Faulted, e);
             }
             finally

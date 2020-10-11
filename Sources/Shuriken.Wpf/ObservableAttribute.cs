@@ -17,6 +17,6 @@ namespace Shuriken
     public sealed class ObservableAttribute : Attribute
     {
         [Pure]
-        internal static bool IsDefined([NotNull] PropertyInfo property) => IsDefined(property, typeof(ObservableAttribute), true);
+        internal static bool IsDefined(PropertyInfo property) => IsDefined(property, typeof(ObservableAttribute), true);
     }
 }

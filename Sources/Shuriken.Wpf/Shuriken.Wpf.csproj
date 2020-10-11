@@ -1,116 +1,61 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8DE93D00-4B56-424B-AA7D-02C4A4A41F0D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>netcoreapp3.0;net46</TargetFrameworks>
+    <UseWPF>true</UseWPF>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Copyright>© 2016-2020 Michael Damatov.</Copyright>
+    <Version>2.0.0</Version>
     <RootNamespace>Shuriken</RootNamespace>
-    <AssemblyName>Shuriken.Wpf</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Shuriken</PackageId>
+    <Authors>Michael Damatov</Authors>
+    <Product>Shuriken</Product>
+    <Description>Fully automated MVVM library. The library observes properties, analyzes changes, and raises change notifications.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/michael-damatov/shuriken</PackageProjectUrl>
+    <PackageIcon>Icon.png</PackageIcon>
+    <PackageTags>mvvm monitor monitoring observable change notification automated background thread</PackageTags>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Shuriken.Wpf.xml</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Release\Shuriken.Wpf.xml</DocumentationFile>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>Properties\Shuriken.public.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
     <DelaySign>true</DelaySign>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="JetBrains.Annotations, Version=11.0.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.Annotations.11.0.0\lib\net20\JetBrains.Annotations.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="WindowsBase" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Diagnostics\EventListener.cs" />
-    <Compile Include="Monitoring\WpfNotificationContext.cs" />
-    <Compile Include="Diagnostics\EventSource.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.Current.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.IAsyncDisposable.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.Monitoring.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.Sessions.cs" />
-    <Compile Include="Monitoring\ApplicationMonitorScope.Suspending.cs" />
-    <Compile Include="Monitoring\INotificationContext.cs" />
-    <Compile Include="Monitoring\ObservableObjectInfo.cs" />
-    <Compile Include="Monitoring\_Caching\ObservableObjectTypeCache.cs" />
-    <Compile Include="Monitoring\_Caching\ParameterizedCommandPropertyAccessor.cs" />
-    <Compile Include="Monitoring\_Caching\ParameterlessCommandPropertyAccessor.cs" />
-    <Compile Include="Monitoring\_Caching\PropertyAccessor.cs" />
-    <Compile Include="Monitoring\_Caching\PropertyPropertyAccessor.cs" />
-    <Compile Include="Monitoring\_ValueBags\ParameterizedCommandValueBag.cs" />
-    <Compile Include="Monitoring\_ValueBags\ParameterlessCommandValueBag.cs" />
-    <Compile Include="Monitoring\_ValueBags\PropertyValueBag.cs" />
-    <Compile Include="Monitoring\_ValueBags\ValueBag.cs" />
-    <Compile Include="ObservableAttribute.cs" />
-    <Compile Include="ObservableObject.cs" />
-    <Compile Include="ObservableObject.INotifyPropertyChanged.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="_Commands\AsyncCommand.cs" />
-    <Compile Include="_Commands\AsyncCommand[T].cs" />
-    <Compile Include="_Commands\Command.cs" />
-    <Compile Include="_Commands\CommandBase.cs" />
-    <Compile Include="_Commands\CommandBase.ICommand.cs" />
-    <Compile Include="_Commands\CommandExecutionController.cs" />
-    <Compile Include="_Commands\CommandExecutionController.IProgress[float].cs" />
-    <Compile Include="_Commands\CommandOptions.cs" />
-    <Compile Include="_Commands\Command[T].cs" />
-    <Compile Include="_Commands\CompletedCommandExecution.cs" />
-    <Compile Include="_Commands\CompletedCommandExecutionState.cs" />
-    <Compile Include="_Commands\ParameterizedCommand[T].cs" />
-    <Compile Include="_Commands\ParameterizedCommand[T].ICommand.cs" />
-    <Compile Include="_Commands\ParameterlessCommand.cs" />
-    <Compile Include="_Commands\ParameterlessCommand.ICommand.cs" />
-    <Compile Include="_Commands\RunningCommandExecution.cs" />
+    <None Include="..\..\Icon.png" Pack="True" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Properties\Shuriken.public.snk" />
-    <None Include="Shuriken.Wpf.csproj.DotSettings" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+
+  <Target Name="ResignAssemblies" AfterTargets="CopyFilesToOutputDirectory" Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <GetFrameworkSdkPath>
+      <Output TaskParameter="Path" PropertyName="FrameworkSdkPath" />
+    </GetFrameworkSdkPath>
+    <PropertyGroup>
+      <SnPath>$([System.IO.Directory]::GetFiles("$(FrameworkSdkPath)", "sn.exe", SearchOption.AllDirectories)[0])</SnPath>
+      <SnkPath>\\Files\Projects\Keys\Shuriken\Shuriken.snk</SnkPath>
+    </PropertyGroup>
+    <Exec Command="&quot;$(SnPath)&quot; -R &quot;$(TargetPath)&quot; &quot;$(SnkPath)&quot;" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>
